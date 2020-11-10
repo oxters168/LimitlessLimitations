@@ -64,3 +64,6 @@ Assets/Rewired
 
 Assets/HeroicTraversal
 !Assets/HeroicTravers/.gitkeep
+
+Assets/Procedural Worlds
+!Assets/Procedural Worlds/.gitkeep
