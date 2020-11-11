@@ -1687,7 +1687,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerId: 0
-  turnSpeed: 2
+  waitTimeAfterTurn: 0.333
+  turnSpeed: 0.8
+  turnAroundSpeed: 1
   currentMovementState: 0
   currentDirection: {x: 0, y: 1}
   prevDirection: {x: 0, y: 1}

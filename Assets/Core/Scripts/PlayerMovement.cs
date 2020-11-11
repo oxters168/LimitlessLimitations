@@ -6,7 +6,13 @@ public class PlayerMovement : MonoBehaviour
 {
     public int playerId = 0;
     private Player player;
-    public float turnSpeed = 0.1f;
+    [Tooltip("Time in seconds to wait after turning before starting to move")]
+    public float waitTimeAfterTurn = 0.2f;
+    private float turnStartTime;
+    [Tooltip("Revolutions per second")]
+    public float turnSpeed = 0.333f;
+    public float turnAroundSpeed = 0.8f;
+    private float currentTurnSpeed = 0;
 
     public enum MovementState { idle = 0, walk = 1, jog = 2, }
     private enum Turn { none, left, right, around, }
@@ -45,17 +51,6 @@ public class PlayerMovement : MonoBehaviour
                 inputDir = new Vector2(0, y);
         }
 
-        //Set state
-        if (Mathf.Abs(inputDir.x) > float.Epsilon || Mathf.Abs(inputDir.y) > float.Epsilon)
-        {
-            if (jog)
-                currentMovementState = MovementState.jog;
-            else
-                currentMovementState = MovementState.walk;
-        }
-        else
-            currentMovementState = MovementState.idle;
-
         //Get turn
         currentDirection = GetDirectionFromInput(inputDir);
         Turn turn = GetTurn(prevDirection, currentDirection);
@@ -67,6 +62,9 @@ public class PlayerMovement : MonoBehaviour
 
         //Set animator values
         animator.SetInteger("State", (int)currentMovementState);
+        animator.ResetTrigger("TurnLeft");
+        animator.ResetTrigger("TurnRight");
+        animator.ResetTrigger("TurnAround");
         if (turn == Turn.left)
             animator.SetTrigger("TurnLeft");
         else if (turn == Turn.right)
@@ -75,14 +73,62 @@ public class PlayerMovement : MonoBehaviour
             animator.SetTrigger("TurnAround");
 
         //Set transform values
-        lerpPercent = Mathf.Clamp01(lerpPercent + Time.deltaTime * turnSpeed);
-        transform.forward = Vector3.Lerp(fromRotDirection.ToXZVector3(), currentDirection.ToXZVector3(), lerpPercent);
+        if (turn != Turn.none)
+        {
+            if (turn == Turn.around)
+                currentTurnSpeed = turnAroundSpeed;
+            else
+                currentTurnSpeed = turnSpeed;
+
+            if (currentMovementState == MovementState.idle)
+                turnStartTime = Time.time;
+        }
+        float currentAngle = GetCurrentTransformAngle();
+        float targetAngle = GetAngleOf(currentDirection);
+        float angleDiff = targetAngle - currentAngle;
+        if (Mathf.Abs(angleDiff) > 180)
+            angleDiff = -angleDiff % 180; //Flip it around to go the shorter way (abs(value) can never be more than 180)
+        float step = Time.deltaTime * (currentTurnSpeed * 360);
+        if (Mathf.Abs(angleDiff) < step)
+            currentAngle = targetAngle;
+        else
+            currentAngle += step * Mathf.Sign(angleDiff);
+
+        transform.forward = Vector2.up.Rotate(currentAngle).ToXZVector3();
+
+        //Set state
+        if (Mathf.Abs(inputDir.x) > float.Epsilon || Mathf.Abs(inputDir.y) > float.Epsilon)
+        {
+            if (Time.time - turnStartTime > waitTimeAfterTurn)
+            {
+                if (jog)
+                    currentMovementState = MovementState.jog;
+                else
+                    currentMovementState = MovementState.walk;
+            }
+        }
+        else
+            currentMovementState = MovementState.idle;
 
         //Set prev values
         prevInputDir = inputDir;
         prevDirection = currentDirection;
     }
 
+    public float GetCurrentTransformAngle()
+    {
+        return GetAngleOf(transform.forward.xz());
+        //return transform.eulerAngles.y;
+    }
+    public static float GetAngleOf(Vector2 dir)
+    {
+        float angle = Vector2.SignedAngle(dir, Vector2.up);
+        if (Mathf.Abs(Mathf.Abs(angle) - 180) <= float.Epsilon)
+            angle = 180;
+        //if (angle < 0)
+        //    angle += 360;
+        return angle;
+    }
     public Vector2 GetDirectionFromInput(Vector2 input)
     {
         if (Mathf.Abs(input.x) > float.Epsilon || Mathf.Abs(input.y) > float.Epsilon)
