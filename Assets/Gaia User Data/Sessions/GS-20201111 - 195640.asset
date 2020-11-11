@@ -1,0 +1,139 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e251860fcd970734c9f14ebd98a146c3, type: 3}
+  m_Name: GS-20201111 - 195640
+  m_EditorClassIdentifier: 
+  m_name: Session 20201111-195640
+  m_description: 'Rocking out at Creativity Central!
+
+
+    If you like Gaia please
+    consider rating it :)'
+  m_previewImage: {fileID: 0}
+  m_dateCreated: 11/11/2020 7:56:40 PM
+  m_terrainWidth: 256
+  m_terrainDepth: 256
+  m_terrainHeight: 256
+  m_seaLevel: 6.25
+  m_spawnDensity: 0.4
+  m_isLocked: 0
+  m_previewImageBytes: 
+  m_previewImageWidth: 0
+  m_previewImageHeight: 0
+  m_operations:
+  - m_description: 'Creating World: 1 x 1 tiles, tile size: 256'
+    m_operationType: 0
+    m_isActive: 1
+    m_affectedTerrainNames: []
+    m_operationDateTime: 11/11/2020 7:56:41 PM
+    scriptableObjectAssetGUID: 3698e0ab2e028cc41a19083fa0c8a326
+    m_isFoldedOut: 0
+    sessionPlaybackState: 1
+    m_terrainsFoldedOut: 0
+    m_serializedExternalAction: 
+  - m_description: 'Creating World: 1 x 1 tiles, tile size: 256'
+    m_operationType: 0
+    m_isActive: 1
+    m_affectedTerrainNames: []
+    m_operationDateTime: 11/11/2020 7:59:18 PM
+    scriptableObjectAssetGUID: 7554b4cd94508784abf0a8dee58be3f9
+    m_isFoldedOut: 0
+    sessionPlaybackState: 1
+    m_terrainsFoldedOut: 0
+    m_serializedExternalAction: 
+  - m_description: 'Creating World: 1 x 1 tiles, tile size: 512'
+    m_operationType: 0
+    m_isActive: 1
+    m_affectedTerrainNames: []
+    m_operationDateTime: 11/11/2020 8:03:44 PM
+    scriptableObjectAssetGUID: 1706ee2adb959e4469670a963aea0020
+    m_isFoldedOut: 0
+    sessionPlaybackState: 1
+    m_terrainsFoldedOut: 0
+    m_serializedExternalAction: 
+  - m_description: RaiseHeight - No Masks
+    m_operationType: 4
+    m_isActive: 1
+    m_affectedTerrainNames:
+    - Terrain_0_0-20201111 - 200344
+    m_operationDateTime: 11/11/2020 8:05:53 PM
+    scriptableObjectAssetGUID: 98387be784cfd9744842f7e5b239f866
+    m_isFoldedOut: 0
+    sessionPlaybackState: 1
+    m_terrainsFoldedOut: 0
+    m_serializedExternalAction: 
+  - m_description: Spawning - Gaia Pro Sample-Texture(Clone)
+    m_operationType: 7
+    m_isActive: 1
+    m_affectedTerrainNames:
+    - Terrain_0_0-20201111 - 200344
+    m_operationDateTime: 11/11/2020 8:05:54 PM
+    scriptableObjectAssetGUID: 67aa7a52567f1134291c544115474f0b
+    m_isFoldedOut: 0
+    sessionPlaybackState: 1
+    m_terrainsFoldedOut: 0
+    m_serializedExternalAction: 
+  - m_description: 'Creating World: 1 x 1 tiles, tile size: 256'
+    m_operationType: 0
+    m_isActive: 1
+    m_affectedTerrainNames: []
+    m_operationDateTime: 11/11/2020 10:12:24 PM
+    scriptableObjectAssetGUID: 36e53f9b29060514f96bdee8745b42d6
+    m_isFoldedOut: 0
+    sessionPlaybackState: 1
+    m_terrainsFoldedOut: 0
+    m_serializedExternalAction: 
+  - m_description: RaiseHeight - No Masks
+    m_operationType: 4
+    m_isActive: 1
+    m_affectedTerrainNames:
+    - Terrain_0_0-20201111 - 221224
+    m_operationDateTime: 11/11/2020 10:15:52 PM
+    scriptableObjectAssetGUID: 0225995b09d13a0458b874d319e2b0ef
+    m_isFoldedOut: 0
+    sessionPlaybackState: 1
+    m_terrainsFoldedOut: 0
+    m_serializedExternalAction: 
+  - m_description: Spawning - Gaia Pro Sample-Texture(Clone)
+    m_operationType: 7
+    m_isActive: 1
+    m_affectedTerrainNames:
+    - Terrain_0_0-20201111 - 221224
+    m_operationDateTime: 11/11/2020 10:15:53 PM
+    scriptableObjectAssetGUID: d66878f23fb8adb41be00e9742987de4
+    m_isFoldedOut: 0
+    sessionPlaybackState: 1
+    m_terrainsFoldedOut: 0
+    m_serializedExternalAction: 
+  m_terrainMinMaxCache:
+  - guid: 658f1033896cf0741a7b2b348fc4318f
+    isWorldmap: 0
+    recalculate: 0
+    min: 0
+    max: 0
+  - guid: 38c633149bb55ff4fb558425f2ba67d9
+    isWorldmap: 0
+    recalculate: 0
+    min: 0
+    max: 0
+  - guid: 7eb4c11f345f16448a60a06b9abd0158
+    isWorldmap: 0
+    recalculate: 0
+    min: 0
+    max: 27.406668
+  - guid: ceda7e268c127374cb64b4c8fa336181
+    isWorldmap: 0
+    recalculate: 0
+    min: 4.554757
+    max: 8.9767
+  m_bakedMaskCacheEntries: []
+  m_worldBiomeMaskSettings: {fileID: 0}
