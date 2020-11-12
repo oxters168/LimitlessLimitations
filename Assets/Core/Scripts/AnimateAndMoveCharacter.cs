@@ -12,7 +12,11 @@ public class AnimateAndMoveCharacter : MonoBehaviour
 
     public int playerId = 0;
     private Player player;
+    [Tooltip("The grid cell size in meters")]
+    public float gridCellSize = 1;
+    public Vector2Int gridIndex = Vector2Int.zero;
     public Vector2 input;
+    private Vector2 characterMoveInput;
     private Vector2 prevInputDir = Vector2.zero;
     public bool jog;
 
@@ -58,9 +62,12 @@ public class AnimateAndMoveCharacter : MonoBehaviour
         
         //Fix input to only allow for one direction at a time
         input = FixToOneAxis(input, prevInputDir);
+        characterMoveInput = OverrideForGrid(input, gridIndex, transform.position.xz(), Direction, gridCellSize);
+        if (currentMovementState != MovementState.idle && input.x == characterMoveInput.x && input.y == characterMoveInput.y)
+            gridIndex = GetNextGridIndex();
 
         //Get turn
-        Direction = GetDirectionFromInput(input);
+        Direction = GetDirectionFromInput(characterMoveInput);
         Turn turnState = GetTurn(prevDirection, Direction);
 
         //Set animator values
@@ -73,32 +80,59 @@ public class AnimateAndMoveCharacter : MonoBehaviour
         AdjustPosition();
 
         //Set state
-        currentMovementState = GetMovementState(input);
+        currentMovementState = GetMovementState(characterMoveInput);
 
         //Set prev values
-        prevInputDir = input;
+        prevInputDir = characterMoveInput;
         prevDirection = Direction;
     }
 
+    public static Vector2Int CalculateGridIndex(Vector2 position, Vector2 direction, float gridCellSize)
+    {
+        float x = position.x / gridCellSize;
+        float y = position.y / gridCellSize;
+        int xInt;
+        int yInt;
+        if ((x < 0 || x > 0) && direction.x < 0)
+            xInt = Mathf.CeilToInt(x);
+        else
+            xInt = Mathf.FloorToInt(x);
+        if ((y < 0 || y > 0) && direction.y < 0)
+            yInt = Mathf.CeilToInt(y);
+        else
+            yInt = Mathf.FloorToInt(y);
+        return new Vector2Int(xInt, yInt);
+    }
+    public Vector2Int GetNextGridIndex()
+    {
+        var nextGridIndex = CalculateGridIndex(transform.position.xz(), Direction, gridCellSize);
+        bool xIsPressed = Mathf.Abs(input.x) > float.Epsilon;
+        bool yIsPressed = Mathf.Abs(input.y) > float.Epsilon;
+        if (xIsPressed)
+            nextGridIndex = new Vector2Int(nextGridIndex.x + (int)Mathf.Sign(input.x), nextGridIndex.y);
+        if (yIsPressed)
+            nextGridIndex = new Vector2Int(nextGridIndex.x, nextGridIndex.y + (int)Mathf.Sign(input.y));
+            
+        if (!xIsPressed && !yIsPressed)
+            nextGridIndex = gridIndex;
+
+        return nextGridIndex;
+    }
+    public static Vector2 GetIndexPosition(Vector2Int index, float gridCellSize)
+    {
+        return new Vector2(index.x * gridCellSize, index.y * gridCellSize);
+    }
     private void AdjustPosition()
     {
-        // float height = td.GetHeight(Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.z));
-        // float height = td.GetInterpolatedHeight(transform.position.x / td.bounds.size.x, transform.position.z / td.bounds.size.z);
-        // float height = tlm.WorldMapTerrain.SampleHeight(transform.position);
-        // transform.position.Set(transform.position.x, height, transform.position.y);
-        // Bounds characterBounds = transform.GetTotalBounds(Space.World);
-        // Vector3 bottomPoint = characterBounds.center + Vector3.down * characterBounds.extents.y;
         Vector3 topPoint = new Vector3(transform.position.x, castingHeight, transform.position.z);
         RaycastHit hitInfo;
         if (Physics.Raycast(topPoint, Vector3.down, out hitInfo))
         {
-            // Debug.Log(hitInfo.distance);
-            // Gaia.TerrainLoaderManager tlm;
-            // tlm.WorldMapTerrain.SampleHeight(Vector3.zero);
             Debug.DrawRay(topPoint, Vector3.down * hitInfo.distance, Color.green);
             transform.position = new Vector3(transform.position.x, castingHeight - hitInfo.distance, transform.position.z);
         }
 
+        Vector2 expectedPosition = GetIndexPosition(gridIndex, gridCellSize);
         if (currentMovementState != MovementState.idle)
         {
             float speed;
@@ -107,8 +141,18 @@ public class AnimateAndMoveCharacter : MonoBehaviour
             else
                 speed = jogSpeed;
             
-            transform.position += Direction.ToXZVector3() * speed * Time.deltaTime;
+            float positionOffset = speed * Time.deltaTime;
+
+            Vector2 outOfWhack = expectedPosition - transform.position.xz();
+            if (Mathf.Abs(Direction.x) > float.Epsilon && positionOffset > Mathf.Abs(outOfWhack.x))
+                positionOffset = Mathf.Abs(outOfWhack.x);
+            else if (Mathf.Abs(Direction.y) > float.Epsilon && positionOffset > Mathf.Abs(outOfWhack.y))
+                positionOffset = Mathf.Abs(outOfWhack.y);
+
+            transform.position += Direction.ToXZVector3() * positionOffset;
         }
+        // else
+        //     transform.position = new Vector3(expectedPosition.x, transform.position.y, expectedPosition.y);
     }
 
     public float GetCurrentTransformAngle()
@@ -147,6 +191,19 @@ public class AnimateAndMoveCharacter : MonoBehaviour
         return tt;
     }
 
+    private static Vector2 OverrideForGrid(Vector2 currentInput, Vector2Int expectedIndex, Vector2 position, Vector2 direction, float gridCellSize)
+    {
+        var currentIndex = CalculateGridIndex(position, direction, gridCellSize);
+        // Vector2 expectedPosition = new Vector2(expectedIndex.x * gridCellSize, expectedIndex.y * gridCellSize);
+
+        // Vector2 outOfWhack = expectedPosition - position;
+        if (expectedIndex.x != currentIndex.x && Mathf.Abs(currentInput.x) <= float.Epsilon)
+            currentInput = new Vector2(Mathf.Sign(expectedIndex.x - currentIndex.x), 0);
+        else if (expectedIndex.y != currentIndex.y && Mathf.Abs(currentInput.y) <= float.Epsilon)
+            currentInput = new Vector2(0, Mathf.Sign(expectedIndex.y - currentIndex.y));
+        
+        return currentInput;
+    }
     private static Vector2 FixToOneAxis(Vector2 currentInput, Vector2 prevInput)
     {
         if (Mathf.Abs(currentInput.x) > float.Epsilon && Mathf.Abs(currentInput.y) > 0)
