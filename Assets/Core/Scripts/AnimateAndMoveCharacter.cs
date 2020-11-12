@@ -2,7 +2,7 @@
 using UnityHelpers;
 using Rewired;
 
-public class AnimateAndMoveCharacter : MonoBehaviour
+public class AnimateAndMoveCharacter : MonoBehaviour, IValueManager
 {
     public enum MovementState { idle = 0, walk = 1, jog = 2, }
     private enum Turn { none, left, right, around, }
@@ -10,15 +10,11 @@ public class AnimateAndMoveCharacter : MonoBehaviour
     // public Gaia.TerrainLoaderManager tlm;
     // public TerrainData td;
 
-    public int playerId = 0;
-    private Player player;
     [Tooltip("The grid cell size in meters")]
     public float gridCellSize = 1;
     public Vector2Int gridIndex = Vector2Int.zero;
-    public Vector2 input;
     private Vector2 characterMoveInput;
     private Vector2 prevInputDir = Vector2.zero;
-    public bool jog;
 
     [Space(10), Tooltip("In meters per second")]
     public float walkSpeed = 1.5f;
@@ -33,7 +29,7 @@ public class AnimateAndMoveCharacter : MonoBehaviour
     private float expectedTurnTime = 0;
     private float turnStartTime = float.MinValue;
 
-    [Space(10), Tooltip("The height from world 0 to cast the ray down and find the ground")]
+    [Space(10), Tooltip("The height of the ray from world 0 that will cast down and find the ground")]
     public float castingHeight = 100;
 
 
@@ -43,22 +39,20 @@ public class AnimateAndMoveCharacter : MonoBehaviour
     private Vector2 prevDirection = Vector2.up;
     private Animator animator;
 
+    private Vector2 input;
+    private bool jog;
+    [Space(10)]
+    public ValuesVault values;
+
     void Start()
     {
-        player = ReInput.players.GetPlayer(playerId);
         animator = GetComponent<Animator>();
     }
     void Update()
     {
         //Retrieve input
-        float x = 0;
-        x += player.GetButton("Horizontal") ? 1 : 0;
-        x -= player.GetNegativeButton("Horizontal") ? 1 : 0;
-        float y = 0;
-        y += player.GetButton("Vertical") ? 1 : 0;
-        y -= player.GetNegativeButton("Vertical") ? 1 : 0;
-        input = new Vector2(x, y);
-        jog = player.GetButton("Jog");
+        input = new Vector2(GetAxis("dpadHor"), GetAxis("dpadVer"));
+        jog = GetToggle("crossBtn");
         
         //Fix input to only allow for one direction at a time
         input = FixToOneAxis(input, prevInputDir);
@@ -277,5 +271,46 @@ public class AnimateAndMoveCharacter : MonoBehaviour
             currentAngle += step * Mathf.Sign(angleDiff);
 
         transform.forward = Vector2.up.Rotate(currentAngle).ToXZVector3();
+    }
+
+    public void SetAxis(string name, float value)
+    {
+        values.GetValue(name).SetAxis(value);
+    }
+    public float GetAxis(string name)
+    {
+        return values.GetValue(name).GetAxis();
+    }
+    public void SetToggle(string name, bool value)
+    {
+        values.GetValue(name).SetToggle(value);
+    }
+    public bool GetToggle(string name)
+    {
+        return values.GetValue(name).GetToggle();
+    }
+    public void SetDirection(string name, Vector3 value)
+    {
+        values.GetValue(name).SetDirection(value);
+    }
+    public Vector3 GetDirection(string name)
+    {
+        return values.GetValue(name).GetDirection();
+    }
+    public void SetPoint(string name, Vector3 value)
+    {
+        values.GetValue(name).SetPoint(value);
+    }
+    public Vector3 GetPoint(string name)
+    {
+        return values.GetValue(name).GetPoint();
+    }
+    public void SetOrientation(string name, Quaternion value)
+    {
+        values.GetValue(name).SetOrientation(value);
+    }
+    public Quaternion GetOrientation(string name)
+    {
+        return values.GetValue(name).GetOrientation();
     }
 }
