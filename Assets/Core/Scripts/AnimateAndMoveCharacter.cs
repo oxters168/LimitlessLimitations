@@ -120,7 +120,7 @@ public class AnimateAndMoveCharacter : MonoBehaviour, IValueManager
     {
         Vector3 topPoint = new Vector3(transform.position.x, castingHeight, transform.position.z);
         RaycastHit hitInfo;
-        if (Physics.Raycast(topPoint, Vector3.down, out hitInfo))
+        if (Physics.Raycast(topPoint, Vector3.down, out hitInfo, castingHeight, LayerMask.GetMask("Ground")))
         {
             Debug.DrawRay(topPoint, Vector3.down * hitInfo.distance, Color.green);
             transform.position = new Vector3(transform.position.x, castingHeight - hitInfo.distance, transform.position.z);

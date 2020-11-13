@@ -67,3 +67,9 @@ Assets/HeroicTraversal
 
 Assets/Procedural Worlds
 !Assets/Procedural Worlds/.gitkeep
+
+Assets/AllIn1SpriteShader
+!Assets/AllIn1SpriteShader/.gitkeep
+
+Assets/Imported/Heroic Asset Series Overworld
+!Assets/Imported/Heroic Asset Series Overworld/Source.txt
