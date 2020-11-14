@@ -4,22 +4,31 @@ using Rewired;
 
 public class AnimateAndMoveCharacter : MonoBehaviour, IValueManager
 {
-    public enum MovementState { idle = 0, walk = 1, jog = 2, }
+    public enum MovementState { idle = 0, walk = 1, jog = 2, swimIdle = 3, swimStroke = 4, underwaterIdle = 5, underwaterStroke = 6 }
     private enum Turn { none, left, right, around, }
 
-    // public Gaia.TerrainLoaderManager tlm;
-    // public TerrainData td;
-
+    [Tooltip("The height of the water plane in world units")]
+    public float waterLevel = 7;
     [Tooltip("The grid cell size in meters")]
     public float gridCellSize = 1;
     public Vector2Int gridIndex = Vector2Int.zero;
     private Vector2 characterMoveInput;
     private Vector2 prevInputDir = Vector2.zero;
 
+    [Space(10), Tooltip("The amount from the top of the character's bounds that stays above the water (in meters)")]
+    public float waterTip = 0.1f;
+    [Tooltip("How much being in water effects speed when walking or jogging (I don't know if trudge is actually a word, but it is now)")]
+    public float trudgeEffect = 0.3f;
+    private float percentUnderwater;
+
     [Space(10), Tooltip("In meters per second")]
     public float walkSpeed = 1.5f;
     [Tooltip("In meters per second")]
     public float jogSpeed = 4.70779f;
+    [Tooltip("In meters per second")]
+    public float swimSpeed = 2f;
+    [Tooltip("In meters per second")]
+    public float underwaterSpeed = 3f;
 
     [Space(10), Tooltip("The time it takes to turn 90 degrees measured in revolutions per second")]
     public float turnSpeed = 0.8f;
@@ -32,7 +41,8 @@ public class AnimateAndMoveCharacter : MonoBehaviour, IValueManager
     [Space(10), Tooltip("The height of the ray from world 0 that will cast down and find the ground")]
     public float castingHeight = 100;
 
-
+    public bool isUnderwater { get; private set; }
+    public bool isSteppingInWater { get; private set; }
     public MovementState currentMovementState { get; private set; }
     private Vector2 _direction = Vector2.up;
     public Vector2 Direction { get { return _direction; } private set { _direction = value; } }
@@ -57,7 +67,7 @@ public class AnimateAndMoveCharacter : MonoBehaviour, IValueManager
         //Fix input to only allow for one direction at a time
         input = FixToOneAxis(input, prevInputDir);
         characterMoveInput = OverrideForGrid(input, gridIndex, transform.position.xz(), Direction, gridCellSize);
-        if (currentMovementState != MovementState.idle && input.x == characterMoveInput.x && input.y == characterMoveInput.y)
+        if (!IsIdle() && input.x == characterMoveInput.x && input.y == characterMoveInput.y)
             gridIndex = GetNextGridIndex();
 
         //Get turn
@@ -66,6 +76,9 @@ public class AnimateAndMoveCharacter : MonoBehaviour, IValueManager
 
         //Set animator values
         ApplyValuesToAnimator(animator, currentMovementState, turnState);
+
+        //Check is underwater
+        CheckIsUnderwater();
 
         //Set transform rotation
         AdjustRotation(turnState);
@@ -80,7 +93,25 @@ public class AnimateAndMoveCharacter : MonoBehaviour, IValueManager
         prevInputDir = characterMoveInput;
         prevDirection = Direction;
     }
+    void OnDrawGizmos()
+    {
+        var characterBounds = transform.GetTotalBounds(Space.World);
+        Gizmos.DrawWireCube(characterBounds.center, characterBounds.size);
+    }
 
+    public bool IsIdle()
+    {
+        return currentMovementState == MovementState.idle || currentMovementState == MovementState.swimIdle || currentMovementState == MovementState.underwaterIdle;
+    }
+    private void CheckIsUnderwater()
+    {
+        float groundHeight = GetGroundHeightAt(transform.position.xz(), castingHeight);
+        var characterBounds = transform.GetTotalBounds(Space.World);
+        float characterNeck = groundHeight + (characterBounds.size.y - waterTip);
+        percentUnderwater = Mathf.Clamp01((waterLevel - groundHeight) / (characterBounds.size.y - waterTip));
+        isSteppingInWater = (groundHeight - waterLevel) < 0;
+        isUnderwater = (characterNeck - waterLevel) <= 0;
+    }
     public static Vector2Int CalculateGridIndex(Vector2 position, Vector2 direction, float gridCellSize)
     {
         float x = position.x / gridCellSize;
@@ -116,24 +147,40 @@ public class AnimateAndMoveCharacter : MonoBehaviour, IValueManager
     {
         return new Vector2(index.x * gridCellSize, index.y * gridCellSize);
     }
-    private void AdjustPosition()
+    public static float GetGroundHeightAt(Vector2 position, float castingHeight = 100)
     {
-        Vector3 topPoint = new Vector3(transform.position.x, castingHeight, transform.position.z);
+        float groundHeight = float.MinValue;
+        Vector3 topPoint = new Vector3(position.x, castingHeight, position.y);
         RaycastHit hitInfo;
         if (Physics.Raycast(topPoint, Vector3.down, out hitInfo, castingHeight, LayerMask.GetMask("Ground")))
         {
             Debug.DrawRay(topPoint, Vector3.down * hitInfo.distance, Color.green);
-            transform.position = new Vector3(transform.position.x, castingHeight - hitInfo.distance, transform.position.z);
+            groundHeight = castingHeight - hitInfo.distance;
         }
-
+        return groundHeight;
+    }
+    private void AdjustPosition()
+    {
         Vector2 expectedPosition = GetIndexPosition(gridIndex, gridCellSize);
-        if (currentMovementState != MovementState.idle)
+        if (!IsIdle())
         {
-            float speed;
-            if (currentMovementState == MovementState.walk)
-                speed = walkSpeed;
-            else
-                speed = jogSpeed;
+            float speed = 0;
+            float trudgeMultiplier = 1 - (1 - trudgeEffect) * percentUnderwater;
+            switch (currentMovementState)
+            {
+                case MovementState.walk:
+                    speed = walkSpeed * (isSteppingInWater ? trudgeMultiplier : 1);
+                    break;
+                case MovementState.jog:
+                    speed = jogSpeed * (isSteppingInWater ? trudgeMultiplier : 1);
+                    break;
+                case MovementState.swimStroke:
+                    speed = swimSpeed;
+                    break;
+                case MovementState.underwaterStroke:
+                    speed = underwaterSpeed;
+                    break;
+            }
             
             float positionOffset = speed * Time.deltaTime;
 
@@ -145,8 +192,17 @@ public class AnimateAndMoveCharacter : MonoBehaviour, IValueManager
 
             transform.position += Direction.ToXZVector3() * positionOffset;
         }
-        // else
-        //     transform.position = new Vector3(expectedPosition.x, transform.position.y, expectedPosition.y);
+
+        float characterPosY;
+        if (isUnderwater)
+        {
+            var bounds = transform.GetTotalBounds(Space.World);
+            characterPosY = waterLevel - (bounds.size.y - waterTip);
+        }
+        else
+            characterPosY = GetGroundHeightAt(transform.position.xz(), castingHeight);
+
+        transform.position = new Vector3(transform.position.x, characterPosY, transform.position.z);
     }
 
     public float GetCurrentTransformAngle()
@@ -229,12 +285,16 @@ public class AnimateAndMoveCharacter : MonoBehaviour, IValueManager
         {
             if (Time.time - turnStartTime > expectedTurnTime)
             {
-                if (jog)
+                if (isUnderwater)
+                    resultState = MovementState.swimStroke;
+                else if (jog)
                     resultState = MovementState.jog;
                 else
                     resultState = MovementState.walk;
             }
         }
+        else if (isUnderwater)
+            resultState = MovementState.swimIdle;
         else
             resultState = MovementState.idle;
 
@@ -256,7 +316,7 @@ public class AnimateAndMoveCharacter : MonoBehaviour, IValueManager
                 expectedTurnTime = 0.25f / currentTurnSpeed;
             }
 
-            if (currentMovementState == MovementState.idle)
+            if (IsIdle())
                 turnStartTime = Time.time;
         }
         float currentAngle = GetCurrentTransformAngle();
