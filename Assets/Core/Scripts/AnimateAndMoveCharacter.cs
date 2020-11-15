@@ -2,7 +2,7 @@
 using UnityHelpers;
 using Rewired;
 
-public class AnimateAndMoveCharacter : MonoBehaviour, IValueManager
+public class AnimateAndMoveCharacter : ValuedObject
 {
     public enum MovementState { idle = 0, walk = 1, jog = 2, swimIdle = 3, swimStroke = 4, underwaterIdle = 5, underwaterStroke = 6 }
     private enum Turn { none, left, right, around, }
@@ -51,8 +51,8 @@ public class AnimateAndMoveCharacter : MonoBehaviour, IValueManager
 
     private Vector2 input;
     private bool jog;
-    [Space(10)]
-    public ValuesVault values;
+    // [Space(10)]
+    // public ValuesVault values;
 
     void Start()
     {
@@ -93,11 +93,11 @@ public class AnimateAndMoveCharacter : MonoBehaviour, IValueManager
         prevInputDir = characterMoveInput;
         prevDirection = Direction;
     }
-    void OnDrawGizmos()
-    {
-        var characterBounds = transform.GetTotalBounds(Space.World);
-        Gizmos.DrawWireCube(characterBounds.center, characterBounds.size);
-    }
+    // void OnDrawGizmos()
+    // {
+    //     var characterBounds = transform.GetTotalBounds(Space.World);
+    //     Gizmos.DrawWireCube(characterBounds.center, characterBounds.size);
+    // }
 
     public bool IsIdle()
     {
@@ -331,46 +331,5 @@ public class AnimateAndMoveCharacter : MonoBehaviour, IValueManager
             currentAngle += step * Mathf.Sign(angleDiff);
 
         transform.forward = Vector2.up.Rotate(currentAngle).ToXZVector3();
-    }
-
-    public void SetAxis(string name, float value)
-    {
-        values.GetValue(name).SetAxis(value);
-    }
-    public float GetAxis(string name)
-    {
-        return values.GetValue(name).GetAxis();
-    }
-    public void SetToggle(string name, bool value)
-    {
-        values.GetValue(name).SetToggle(value);
-    }
-    public bool GetToggle(string name)
-    {
-        return values.GetValue(name).GetToggle();
-    }
-    public void SetDirection(string name, Vector3 value)
-    {
-        values.GetValue(name).SetDirection(value);
-    }
-    public Vector3 GetDirection(string name)
-    {
-        return values.GetValue(name).GetDirection();
-    }
-    public void SetPoint(string name, Vector3 value)
-    {
-        values.GetValue(name).SetPoint(value);
-    }
-    public Vector3 GetPoint(string name)
-    {
-        return values.GetValue(name).GetPoint();
-    }
-    public void SetOrientation(string name, Quaternion value)
-    {
-        values.GetValue(name).SetOrientation(value);
-    }
-    public Quaternion GetOrientation(string name)
-    {
-        return values.GetValue(name).GetOrientation();
     }
 }

@@ -30,5 +30,6 @@ public class PlayerInputBridge : MonoBehaviour
         controlValues.SetAxis("dpadHor", x);
         controlValues.SetAxis("dpadVer", y);
         controlValues.SetToggle("crossBtn", player.GetButton("Jog"));
+        controlValues.SetToggle("triangleBtn", player.GetButton("EnterExitVehicle"));
     }
 }
