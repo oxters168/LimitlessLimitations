@@ -877,7 +877,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5452899242917149450}
   - component: {fileID: 5452899242924594410}
-  - component: {fileID: 5452899242917308201}
+  - component: {fileID: 3723227756829877727}
   m_Layer: 13
   m_Name: Character
   m_TagString: Untagged
@@ -920,7 +920,7 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
---- !u!114 &5452899242917308201
+--- !u!114 &3723227756829877727
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -929,7 +929,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5452899242917308202}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f5a03379c13ac774aa669b4cdeaf5da6, type: 3}
+  m_Script: {fileID: 11500000, guid: 80e9e9b5af3f81248b15205620a18fb5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   values:
@@ -963,16 +963,46 @@ MonoBehaviour:
       point: {x: 0, y: 0, z: 0}
       orientation: {x: 0, y: 0, z: 0, w: 0}
   waterLevel: 14
-  gridCellSize: 1
-  gridIndex: {x: 0, y: 0}
   waterTip: 0.4
   trudgeEffect: 0.3
   walkSpeed: 1.5
   jogSpeed: 4.70779
   swimSpeed: 2
   underwaterSpeed: 3
-  turnSpeed: 0.8
-  turnAroundSpeed: 1
+  rotSpeed: 100
+  speedEffect:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.09059811
+      value: 0.5866455
+      inSlope: 1.5938038
+      outSlope: 1.5938038
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.03329642
+      outSlope: 0.03329642
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.23367004
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   castingHeight: 100
 --- !u!1 &5452899242917308204
 GameObject:
