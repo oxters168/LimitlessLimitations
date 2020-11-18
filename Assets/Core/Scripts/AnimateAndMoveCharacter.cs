@@ -24,7 +24,11 @@ public class AnimateAndMoveCharacter : ValuedObject
     [Tooltip("How fast the character turns in degrees per second")]
     public float rotSpeed = 100f;
     [Tooltip("How much the current character's speed effects their rotational speed")]
-    public AnimationCurve speedEffect;
+    public AnimationCurve speedEffect = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1));
+    [Tooltip("How long it takes to switch from and idle state to a moving state")]
+    public float idleToMoveTime = 0.1f;
+    [Tooltip("The angle between the previous input and the current input where the idle to move delay does not apply")]
+    public float idleToMoveExempt = 45;
 
     [Space(10), Tooltip("The height of the ray from world 0 that will cast down and find the ground")]
     public float castingHeight = 100;
@@ -38,7 +42,16 @@ public class AnimateAndMoveCharacter : ValuedObject
     private Animator animator;
 
     private Vector2 input;
+    private Vector2 prevInput;
+    private float inputStartTime;
     private bool jog;
+
+    private CustomAnimationData currentCustomAnim;
+    private float customAnimStartTime;
+    public bool IsRunningCustomAnim { get { return currentCustomAnim != null && Time.time - customAnimStartTime <= currentCustomAnim.executionTime; } }
+    private Vector2 customAnimStartDir;
+    private Vector2 customAnimStartPos;
+    private bool toggledCustomAnim;
 
     void Start()
     {
@@ -51,21 +64,34 @@ public class AnimateAndMoveCharacter : ValuedObject
         jog = GetToggle("crossBtn");
         
         //Set animator values
-        ApplyValuesToAnimator(animator, currentMovementState);
+        ApplyValuesToAnimator();
 
         //Check is underwater
         IsUnderwater = CheckIsUnderwater(transform, waterLevel, castingHeight, waterTip, out percentUnderwater, out _isSteppingInWater);
 
+        //Set state
+        currentMovementState = GetMovementState(transform, input, prevInput, idleToMoveTime, idleToMoveExempt, ref inputStartTime, currentMovementState, jog, IsUnderwater);
+        
         float currentSpeed = GetCurrentSpeed(currentMovementState, walkSpeed, jogSpeed, swimSpeed, underwaterSpeed, trudgeEffect, percentUnderwater, IsSteppingInWater);
 
         //Set transform rotation
-        AdjustRotation(transform, input, rotSpeed, currentSpeed, Mathf.Max(walkSpeed, jogSpeed, swimSpeed, underwaterSpeed), speedEffect, Time.deltaTime);
+        AdjustRotation(currentSpeed, Mathf.Max(walkSpeed, jogSpeed, swimSpeed, underwaterSpeed));
 
         //Set transform position
-        AdjustPosition(transform, currentMovementState, currentSpeed, IsUnderwater, waterLevel, waterTip, castingHeight);
+        AdjustPosition(currentSpeed);
 
-        //Set state
-        currentMovementState = GetMovementState(input, currentMovementState, jog, IsUnderwater);
+        prevInput = input;
+    }
+
+    public void RunCustomAnim(CustomAnimationData animData)
+    {
+        if (!IsRunningCustomAnim || currentCustomAnim.canBeInterrupted)
+        {
+            customAnimStartTime = Time.time;
+            customAnimStartDir = (Mathf.Abs(input.x) > float.Epsilon || Mathf.Abs(input.y) > float.Epsilon) ? input.normalized : transform.forward.xz();
+            customAnimStartPos = transform.position.xz();
+            currentCustomAnim = animData;
+        }
     }
 
     public static bool IsIdle(MovementState currentMovementState)
@@ -114,26 +140,6 @@ public class AnimateAndMoveCharacter : ValuedObject
         }
         return speed;
     }
-    private static void AdjustPosition(Transform transform, MovementState currentMovementState, float speed, bool isUnderwater, float waterLevel, float waterTip, float castingHeight)
-    {
-        if (!IsIdle(currentMovementState))
-        {
-            float positionOffset = speed * Time.deltaTime;
-
-            transform.position += transform.forward * positionOffset;
-        }
-
-        float characterPosY;
-        if (isUnderwater)
-        {
-            var bounds = transform.GetTotalBounds(Space.World);
-            characterPosY = waterLevel - (bounds.size.y - waterTip);
-        }
-        else
-            characterPosY = GetGroundHeightAt(transform.position.xz(), castingHeight);
-
-        transform.position = new Vector3(transform.position.x, characterPosY, transform.position.z);
-    }
 
     public static float GetTransformAngle(Transform transform)
     {
@@ -147,14 +153,35 @@ public class AnimateAndMoveCharacter : ValuedObject
         return angle;
     }
 
-    private static void ApplyValuesToAnimator(Animator animator, MovementState moveState)
+    private void ApplyValuesToAnimator()
     {
-        animator.SetInteger("State", (int)moveState);
+        animator.SetBool("CustomAnim", IsRunningCustomAnim);
+        if (IsRunningCustomAnim)
+        {
+            if (!toggledCustomAnim)
+            {
+                animator.SetTrigger(currentCustomAnim.animationToggleName);
+                toggledCustomAnim = true;
+            }
+        }
+        else
+            toggledCustomAnim = false;
+        
+        animator.SetInteger("State", (int)currentMovementState);
     }
-    private static MovementState GetMovementState(Vector2 currentInput, MovementState currentMovementState, bool jog, bool isUnderwater)
+    private static MovementState GetMovementState(Transform transform, Vector2 currentInput, Vector2 prevInput, float idleToMoveTime, float angleDelayExempt, ref float inputStartTime, MovementState currentMovementState, bool jog, bool isUnderwater)
     {
         MovementState resultState = currentMovementState;
-        if (Mathf.Abs(currentInput.x) > float.Epsilon || Mathf.Abs(currentInput.y) > float.Epsilon)
+        bool hasInput = Mathf.Abs(currentInput.x) > float.Epsilon || Mathf.Abs(currentInput.y) > float.Epsilon;
+        bool prevHasInput = Mathf.Abs(prevInput.x) > float.Epsilon || Mathf.Abs(prevInput.y) > float.Epsilon;
+        float angleBetween = float.MaxValue;
+        if (hasInput && !prevHasInput)
+        {
+            inputStartTime = Time.time;
+            angleBetween = Vector2.Angle(currentInput.normalized, transform.forward.xz().normalized);
+        }
+
+        if (hasInput && ((Time.time - inputStartTime) >= idleToMoveTime || angleBetween <= Mathf.Abs(angleDelayExempt)))
         {
             if (isUnderwater)
                 resultState = MovementState.swimStroke;
@@ -171,19 +198,52 @@ public class AnimateAndMoveCharacter : ValuedObject
         return resultState;
     }
 
-    private static void AdjustRotation(Transform transform, Vector2 input, float rotSpeed, float currentSpeed, float maxSpeed, AnimationCurve affect, float timestep)
+    private void AdjustRotation(float currentSpeed, float maxSpeed)
     {
-        if (Mathf.Abs(input.x) > float.Epsilon || Mathf.Abs(input.y) > float.Epsilon)
+        bool customAnimOverride = IsRunningCustomAnim && currentCustomAnim.affectMovement;
+        if (!customAnimOverride && (Mathf.Abs(input.x) > float.Epsilon || Mathf.Abs(input.y) > float.Epsilon))
         {
-            float maxRotDiff = rotSpeed * timestep;
+            float maxRotDiff = rotSpeed * Time.deltaTime;
 
-            float angleDiff = transform.forward.xz().GetShortestSignedAngle(input.ToCircle());
+            float angleDiff = transform.forward.xz().normalized.GetShortestSignedAngle(input.normalized);
             float appliedRotDiff = angleDiff;
             if (Mathf.Abs(appliedRotDiff) > maxRotDiff)
                 appliedRotDiff = maxRotDiff * Mathf.Sign(appliedRotDiff);
 
-            appliedRotDiff = Mathf.Lerp(angleDiff, appliedRotDiff, affect.Evaluate(Mathf.Clamp01(currentSpeed / maxSpeed)));
+            appliedRotDiff = Mathf.Lerp(angleDiff, appliedRotDiff, speedEffect.Evaluate(Mathf.Clamp01(currentSpeed / maxSpeed)));
             transform.forward = Quaternion.AngleAxis(appliedRotDiff, Vector3.up) * transform.forward;
         }
+        else if (customAnimOverride)
+        {
+            transform.forward = customAnimStartDir.ToXZVector3();
+        }
+    }
+    private void AdjustPosition(float speed)
+    {
+        bool customAnimOverride = IsRunningCustomAnim && currentCustomAnim.affectMovement;
+
+        Vector3 finalPosition = transform.position;
+        if (!customAnimOverride && !IsIdle(currentMovementState))
+        {
+            float positionOffset = speed * Time.deltaTime;
+
+            finalPosition += transform.forward * positionOffset;
+        }
+        else if (customAnimOverride)
+        {
+            finalPosition = customAnimStartPos.ToXZVector3() + transform.forward * currentCustomAnim.distanceTravelled * currentCustomAnim.travelMap.Evaluate((Time.time - customAnimStartTime) / currentCustomAnim.executionTime);
+        }
+
+        float characterPosY;
+        if (IsUnderwater)
+        {
+            var bounds = transform.GetTotalBounds(Space.World);
+            characterPosY = waterLevel - (bounds.size.y - waterTip);
+        }
+        else
+            characterPosY = GetGroundHeightAt(transform.position.xz(), castingHeight);
+
+        finalPosition = new Vector3(finalPosition.x, characterPosY, finalPosition.z);
+        transform.position = finalPosition;
     }
 }

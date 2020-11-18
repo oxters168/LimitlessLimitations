@@ -20,16 +20,13 @@ public class PlayerInputBridge : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        float x = 0;
-        x += player.GetButton("Horizontal") ? 1 : 0;
-        x -= player.GetNegativeButton("Horizontal") ? 1 : 0;
-        float y = 0;
-        y += player.GetButton("Vertical") ? 1 : 0;
-        y -= player.GetNegativeButton("Vertical") ? 1 : 0;
+        float x = player.GetAxis("Horizontal");
+        float y = player.GetAxis("Vertical");
 
         controlValues.SetAxis("dpadHor", x);
         controlValues.SetAxis("dpadVer", y);
         controlValues.SetToggle("crossBtn", player.GetButton("Jog"));
         controlValues.SetToggle("triangleBtn", player.GetButton("EnterExitVehicle"));
+        controlValues.SetToggle("squareBtn", player.GetButton("Roll"));
     }
 }

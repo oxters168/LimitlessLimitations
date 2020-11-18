@@ -878,6 +878,7 @@ GameObject:
   - component: {fileID: 5452899242917149450}
   - component: {fileID: 5452899242924594410}
   - component: {fileID: 3723227756829877727}
+  - component: {fileID: 3553332597518836537}
   m_Layer: 13
   m_Name: Character
   m_TagString: Untagged
@@ -962,6 +963,62 @@ MonoBehaviour:
       direction: {x: 0, y: 0, z: 0}
       point: {x: 0, y: 0, z: 0}
       orientation: {x: 0, y: 0, z: 0, w: 0}
+    - name: squareBtn
+      storedTypes: 2
+      axis: 0
+      toggle: 0
+      direction: {x: 0, y: 0, z: 0}
+      point: {x: 0, y: 0, z: 0}
+      orientation: {x: 0, y: 0, z: 0, w: 0}
+    - name: circleBtn
+      storedTypes: 2
+      axis: 0
+      toggle: 0
+      direction: {x: 0, y: 0, z: 0}
+      point: {x: 0, y: 0, z: 0}
+      orientation: {x: 0, y: 0, z: 0, w: 0}
+    - name: l1Btn
+      storedTypes: 2
+      axis: 0
+      toggle: 0
+      direction: {x: 0, y: 0, z: 0}
+      point: {x: 0, y: 0, z: 0}
+      orientation: {x: 0, y: 0, z: 0, w: 0}
+    - name: l2Btn
+      storedTypes: 2
+      axis: 0
+      toggle: 0
+      direction: {x: 0, y: 0, z: 0}
+      point: {x: 0, y: 0, z: 0}
+      orientation: {x: 0, y: 0, z: 0, w: 0}
+    - name: l3Btn
+      storedTypes: 2
+      axis: 0
+      toggle: 0
+      direction: {x: 0, y: 0, z: 0}
+      point: {x: 0, y: 0, z: 0}
+      orientation: {x: 0, y: 0, z: 0, w: 0}
+    - name: r1Btn
+      storedTypes: 2
+      axis: 0
+      toggle: 0
+      direction: {x: 0, y: 0, z: 0}
+      point: {x: 0, y: 0, z: 0}
+      orientation: {x: 0, y: 0, z: 0, w: 0}
+    - name: r2Btn
+      storedTypes: 2
+      axis: 0
+      toggle: 0
+      direction: {x: 0, y: 0, z: 0}
+      point: {x: 0, y: 0, z: 0}
+      orientation: {x: 0, y: 0, z: 0, w: 0}
+    - name: r3Btn
+      storedTypes: 2
+      axis: 0
+      toggle: 0
+      direction: {x: 0, y: 0, z: 0}
+      point: {x: 0, y: 0, z: 0}
+      orientation: {x: 0, y: 0, z: 0, w: 0}
   waterLevel: 14
   waterTip: 0.4
   trudgeEffect: 0.3
@@ -1003,7 +1060,22 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  idleToMoveTime: 0.1
+  idleToMoveExempt: 45
   castingHeight: 100
+--- !u!114 &3553332597518836537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5452899242917308202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc6eb346ba6a313409131bbd708aeb29, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rollData: {fileID: 11400000, guid: 65dbfcf001058b64389aad4bb9c11e4e, type: 2}
 --- !u!1 &5452899242917308204
 GameObject:
   m_ObjectHideFlags: 0
