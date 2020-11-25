@@ -12,8 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38b142d3a49370d44bebac1e1ce3d89f, type: 3}
   m_Name: SwordAttack1
   m_EditorClassIdentifier: 
-  animationToggleName: 
-  executionTime: 0
+  animationToggleName: Attack
+  executionTime: 1
+  canBeInterrupted: 1
+  blockMovement: 0
+  blockRotation: 0
   distanceTravelled: 0
   travelMap:
     serializedVersion: 2
