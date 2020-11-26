@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: SwordAttack1
   m_EditorClassIdentifier: 
   animationToggleName: Attack
-  executionTime: 1
+  isUpperbody: 1
+  executionTime: 0.8
   canBeInterrupted: 1
   blockMovement: 0
   blockRotation: 0
+  blockAnimation: 0
   distanceTravelled: 0
   travelMap:
     serializedVersion: 2

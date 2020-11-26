@@ -10,7 +10,7 @@ public class HumanoidCustomMoves : MonoBehaviour
     private Animator animator { get { if (_animator == null) _animator = GetComponent<Animator>(); return _animator; } }
 
     [Tooltip("How fast the character moves when strafing (in meters per second)")]
-    public float strafeSpeed = 1;
+    public float strafeSpeed = 3.2f;
     private bool isStrafing;
 
     public CustomAnimationData rollData;
@@ -33,15 +33,22 @@ public class HumanoidCustomMoves : MonoBehaviour
         isStrafing = Character.GetToggle("l2Btn") && !Character.IsUnderwater;
         if ((!IsRunningCustomAnim || currentCustomAnim.canBeInterrupted) && !Character.IsUnderwater)
         {
+            CustomAnimationData nextAnimData = null;
+            Vector2 direction = transform.forward.xz().normalized;
+
             if (Character.GetToggle("circleBtn"))
             {
                 if (!prevRoll)
                 {
                     prevRoll = true;
+                    nextAnimData = rollData;
                     if (isStrafing && !input.IsZero())
-                        SetCustomAnim(rollData, input.normalized);
-                    else
-                        SetCustomAnim(rollData);
+                    {
+                        direction = input.normalized;
+                        // SetCustomAnim(rollData, input.normalized);
+                    }
+                    // else
+                    //     SetCustomAnim(rollData);
                 }
             }
             else
@@ -52,17 +59,23 @@ public class HumanoidCustomMoves : MonoBehaviour
                 if (!prevAttack)
                 {
                     prevAttack = true;
-                    SetCustomAnim(attackData);
+                    // SetCustomAnim(attackData);
+                    nextAnimData = attackData;
                 }
             }
             else
                 prevAttack = false;
+
+            // if (nextAnimData != null && (!IsRunningCustomAnim || currentCustomAnim != nextAnimData))
+            if (nextAnimData != null && (!IsRunningCustomAnim || (currentCustomAnim.canBeInterrupted && currentCustomAnim != nextAnimData)))
+                SetCustomAnim(nextAnimData, direction);
         }
 
         animator.SetFloat("StrafeDir", PercentClockwise(transform.forward.xz().normalized, input.normalized));
 
         //Custom anim stuff
-        animator.SetBool("CustomAnim", IsRunningCustomAnim);
+        animator.SetLayerWeight(animator.GetLayerIndex("Upperbody"), (IsRunningCustomAnim && currentCustomAnim.isUpperbody) ? 1 : 0);
+        animator.SetBool("CustomAnim", IsRunningCustomAnim && currentCustomAnim.blockAnimation);
         Character.blockMovement = (IsRunningCustomAnim && currentCustomAnim.blockMovement) || isStrafing;
         Character.blockRotation = (IsRunningCustomAnim && currentCustomAnim.blockRotation) || isStrafing;
         if (IsRunningCustomAnim)
@@ -73,8 +86,11 @@ public class HumanoidCustomMoves : MonoBehaviour
                 toggledCustomAnim = true;
             }
 
-            Vector2 nextPosition = customAnimStartPos + customAnimStartDir * currentCustomAnim.distanceTravelled * currentCustomAnim.travelMap.Evaluate(CustomAnimPercentPlayed);
-            Character.SetPosition(nextPosition);
+            if (currentCustomAnim.distanceTravelled > float.Epsilon)
+            {
+                Vector2 nextPosition = customAnimStartPos + customAnimStartDir * currentCustomAnim.distanceTravelled * currentCustomAnim.travelMap.Evaluate(CustomAnimPercentPlayed);
+                Character.SetPosition(nextPosition);
+            }
         }
         else
             toggledCustomAnim = false;
@@ -101,6 +117,9 @@ public class HumanoidCustomMoves : MonoBehaviour
     }
     private void SetCustomAnim(CustomAnimationData customAnim, Vector2 dir)
     {
+        // if (!IsRunningCustomAnim || (currentCustomAnim.canBeInterrupted && currentCustomAnim != customAnim))
+            toggledCustomAnim = false;
+
         currentCustomAnim = customAnim;
         customAnimStartTime = Time.time;
         customAnimStartDir = dir;
@@ -109,7 +128,7 @@ public class HumanoidCustomMoves : MonoBehaviour
 
     public void Hit()
     {
-        Debug.Log("Hit!");
+        // Debug.Log("Hit!");
     }
     public void FootL()
     {
