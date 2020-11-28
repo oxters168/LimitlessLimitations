@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: DodgeRoll
   m_EditorClassIdentifier: 
   animationToggleName: Roll
+  isUpperbody: 0
   executionTime: 0.5
   canBeInterrupted: 0
   blockMovement: 1
   blockRotation: 1
+  blockAnimation: 0
   distanceTravelled: 4
   travelMap:
     serializedVersion: 2
@@ -24,20 +26,20 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 0
       value: 0
-      inSlope: 0
-      outSlope: 0
+      inSlope: 0.29914528
+      outSlope: 0.29914528
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0
+      outWeight: 0.097297296
     - serializedVersion: 3
       time: 1
       value: 1
-      inSlope: 2
-      outSlope: 2
+      inSlope: 1.6666666
+      outSlope: 1.6666666
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0
+      inWeight: 0.048648655
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2

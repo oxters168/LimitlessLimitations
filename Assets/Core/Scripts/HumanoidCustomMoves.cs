@@ -3,8 +3,13 @@ using UnityHelpers;
 
 public class HumanoidCustomMoves : MonoBehaviour
 {
+    private const int DUAL_SHOULDER_TYPE = -1;
+    private const int DUAL_HIP_TYPE = -2;
+
     private AnimateAndMoveCharacter _character;
     private AnimateAndMoveCharacter Character { get { if (_character == null) _character = GetComponent<AnimateAndMoveCharacter>(); return _character; } }
+    private HumanoidEquipSlots _equipSlots;
+    private HumanoidEquipSlots EquipSlots { get { if (_equipSlots == null) _equipSlots = GetComponent<HumanoidEquipSlots>(); return _equipSlots; } }
 
     private Animator _animator;
     private Animator animator { get { if (_animator == null) _animator = GetComponent<Animator>(); return _animator; } }
@@ -15,6 +20,8 @@ public class HumanoidCustomMoves : MonoBehaviour
 
     public CustomAnimationData rollData;
     public CustomAnimationData attackData;
+    public CustomAnimationData unsheathData;
+
     private bool prevRoll;
     private bool prevAttack;
 
@@ -26,8 +33,28 @@ public class HumanoidCustomMoves : MonoBehaviour
     private Vector2 customAnimStartPos;
     private bool toggledCustomAnim;
 
+    [Space(10)]
+    public WeaponData testWeaponL;
+    private WeaponData prevWeaponL;
+    public WeaponData testWeaponR;
+    private WeaponData prevWeaponR;
+
     void Update()
     {
+        if (prevWeaponL != testWeaponL)
+        {
+            prevWeaponL = testWeaponL;
+            EquipSlots.SetItem(testWeaponL, HumanoidEquipSlots.SlotSpace.leftHand);
+        }
+        if (prevWeaponR != testWeaponR)
+        {
+            prevWeaponR = testWeaponR;
+            EquipSlots.SetItem(testWeaponR, HumanoidEquipSlots.SlotSpace.rightHand);
+        }
+
+        bool leftHanded;
+        int weaponType = GetWeaponType(EquipSlots.GetItem(HumanoidEquipSlots.SlotSpace.leftHand), EquipSlots.GetItem(HumanoidEquipSlots.SlotSpace.rightHand), out leftHanded);
+
         //Input stuff
         Vector2 input = new Vector2(Character.GetAxis("dpadHor"), Character.GetAxis("dpadVer"));
         isStrafing = Character.GetToggle("l2Btn") && !Character.IsUnderwater;
@@ -43,12 +70,7 @@ public class HumanoidCustomMoves : MonoBehaviour
                     prevRoll = true;
                     nextAnimData = rollData;
                     if (isStrafing && !input.IsZero())
-                    {
                         direction = input.normalized;
-                        // SetCustomAnim(rollData, input.normalized);
-                    }
-                    // else
-                    //     SetCustomAnim(rollData);
                 }
             }
             else
@@ -56,11 +78,14 @@ public class HumanoidCustomMoves : MonoBehaviour
 
             if (Character.GetToggle("squareBtn"))
             {
-                if (!prevAttack)
+                if (!prevAttack && weaponType > 0)
                 {
                     prevAttack = true;
-                    // SetCustomAnim(attackData);
-                    nextAnimData = attackData;
+                    if (EquipSlots.isHeld)
+                        nextAnimData = attackData;
+                    else
+                        nextAnimData = unsheathData;
+                        // nextAnimData = GetUnsheathAnimData(sheathType);
                 }
             }
             else
@@ -72,6 +97,9 @@ public class HumanoidCustomMoves : MonoBehaviour
         }
 
         animator.SetFloat("StrafeDir", PercentClockwise(transform.forward.xz().normalized, input.normalized));
+        animator.SetInteger("WeaponType", weaponType);
+        // animator.SetInteger("SheathType", (int)sheathType);
+        animator.SetBool("LeftHanded", leftHanded);
 
         //Custom anim stuff
         animator.SetLayerWeight(animator.GetLayerIndex("Upperbody"), (IsRunningCustomAnim && currentCustomAnim.isUpperbody) ? 1 : 0);
@@ -106,10 +134,7 @@ public class HumanoidCustomMoves : MonoBehaviour
 
     private float PercentClockwise(Vector2 first, Vector2 second)
     {
-        float angleOffset = first.GetShortestSignedAngle(second);
-        if (angleOffset < 0)
-            angleOffset += 360;
-        return angleOffset / 360;
+        return first.GetClockwiseAngle(second) / 360;
     }
     private void SetCustomAnim(CustomAnimationData customAnim)
     {
@@ -125,6 +150,49 @@ public class HumanoidCustomMoves : MonoBehaviour
         customAnimStartDir = dir;
         customAnimStartPos = transform.position.xz();
     }
+    private static int GetWeaponType(ItemData leftHandItem, ItemData rightHandItem, out bool leftHanded)
+    {
+        WeaponData leftHandWeapon = null;
+        WeaponData rightHandWeapon = null;
+        if (leftHandItem is WeaponData)
+            leftHandWeapon = (WeaponData)leftHandItem;
+        if (rightHandItem is WeaponData)
+            rightHandWeapon = (WeaponData)rightHandItem;
+
+        leftHanded = false;
+
+        int weaponType = -1;
+        if (rightHandWeapon != null && leftHandWeapon != null)
+        {
+            if (rightHandWeapon.type == WeaponType.shield && leftHandWeapon.type != WeaponType.shield)
+            {
+                leftHanded = true;
+                weaponType = (int)leftHandWeapon.type;
+            }
+            else if (leftHandWeapon.type == WeaponType.shield && rightHandWeapon.type != WeaponType.shield)
+            {
+                weaponType = (int)rightHandWeapon.type;
+            }
+            else
+            {
+                if (rightHandWeapon.type == WeaponType.dagger && leftHandWeapon.type == WeaponType.dagger)
+                    weaponType = DUAL_HIP_TYPE;
+                else
+                    weaponType = DUAL_SHOULDER_TYPE;
+            }
+        }
+        else if (rightHandWeapon != null)
+        {
+            weaponType = (int)rightHandWeapon.type;
+        }
+        else if (leftHandWeapon != null)
+        {
+            leftHanded = true;
+            weaponType = (int)leftHandWeapon.type;
+        }
+
+        return weaponType;
+    }
 
     public void Hit()
     {
@@ -135,5 +203,9 @@ public class HumanoidCustomMoves : MonoBehaviour
     }
     public void FootR()
     {
+    }
+    public void WeaponSwitch()
+    {
+        EquipSlots.isHeld = !EquipSlots.isHeld;
     }
 }

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animationToggleName: Attack
   isUpperbody: 1
-  executionTime: 0.8
+  executionTime: 0.6
   canBeInterrupted: 1
   blockMovement: 0
   blockRotation: 0
