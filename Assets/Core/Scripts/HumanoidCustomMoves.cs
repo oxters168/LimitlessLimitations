@@ -5,6 +5,7 @@ public class HumanoidCustomMoves : MonoBehaviour
 {
     private const int DUAL_SHOULDER_TYPE = -1;
     private const int DUAL_HIP_TYPE = -2;
+    private const int WEAPON_NONE = int.MinValue;
 
     private AnimateAndMoveCharacter _character;
     private AnimateAndMoveCharacter Character { get { if (_character == null) _character = GetComponent<AnimateAndMoveCharacter>(); return _character; } }
@@ -17,13 +18,22 @@ public class HumanoidCustomMoves : MonoBehaviour
     [Tooltip("How fast the character moves when strafing (in meters per second)")]
     public float strafeSpeed = 3.2f;
     private bool isStrafing;
+    private bool isBlocking;
 
     public CustomAnimationData rollData;
     public CustomAnimationData attackData;
     public CustomAnimationData unsheathData;
+    public CustomAnimationData sheathData;
+
+    [Space(10), Tooltip("How long before the combo breaks")]
+    public float attackComboTime = 0.2f;
+    private float currentAttackComboTime;
+    private int attackCombo;
+    private float lastAttack;
 
     private bool prevRoll;
     private bool prevAttack;
+    private bool prevSheath;
 
     private CustomAnimationData currentCustomAnim;
     private float customAnimStartTime;
@@ -52,12 +62,19 @@ public class HumanoidCustomMoves : MonoBehaviour
             EquipSlots.SetItem(testWeaponR, HumanoidEquipSlots.SlotSpace.rightHand);
         }
 
-        bool leftHanded;
-        int weaponType = GetWeaponType(EquipSlots.GetItem(HumanoidEquipSlots.SlotSpace.leftHand), EquipSlots.GetItem(HumanoidEquipSlots.SlotSpace.rightHand), out leftHanded);
+        if (Time.time - lastAttack > currentAttackComboTime)
+            attackCombo = 0;
+        attackCombo %= 3;
+        animator.SetInteger("AttackCombo", attackCombo);
 
+        bool leftHanded;
+        bool hasShield;
+        int weaponType = GetWeaponType(EquipSlots.GetItem(HumanoidEquipSlots.SlotSpace.leftHand), EquipSlots.GetItem(HumanoidEquipSlots.SlotSpace.rightHand), out leftHanded, out hasShield);
+                
         //Input stuff
         Vector2 input = new Vector2(Character.GetAxis("dpadHor"), Character.GetAxis("dpadVer"));
-        isStrafing = Character.GetToggle("l2Btn") && !Character.IsUnderwater;
+        isStrafing = Character.GetToggle("r2Btn") && !Character.IsUnderwater;
+        isBlocking = Character.GetToggle("l2Btn") && !Character.IsUnderwater;
         if ((!IsRunningCustomAnim || currentCustomAnim.canBeInterrupted) && !Character.IsUnderwater)
         {
             CustomAnimationData nextAnimData = null;
@@ -78,32 +95,52 @@ public class HumanoidCustomMoves : MonoBehaviour
 
             if (Character.GetToggle("squareBtn"))
             {
-                if (!prevAttack && weaponType > 0)
+                if (!prevAttack && (IsRunningCustomAnim && currentCustomAnim != attackData || !IsRunningCustomAnim) && !isBlocking && weaponType > WEAPON_NONE)
                 {
                     prevAttack = true;
                     if (EquipSlots.isHeld)
+                    {
                         nextAnimData = attackData;
+
+                        attackCombo++;
+                        lastAttack = Time.time;
+                        currentAttackComboTime = nextAnimData.executionTime + attackComboTime;
+                    }
                     else
                         nextAnimData = unsheathData;
-                        // nextAnimData = GetUnsheathAnimData(sheathType);
                 }
             }
             else
                 prevAttack = false;
 
-            // if (nextAnimData != null && (!IsRunningCustomAnim || currentCustomAnim != nextAnimData))
+            if (Character.GetToggle("r1Btn"))
+            {
+                if (!prevSheath && weaponType > WEAPON_NONE)
+                {
+                    prevSheath = true;
+                    if (EquipSlots.isHeld)
+                        nextAnimData = sheathData;
+                    else
+                        nextAnimData = unsheathData;
+                }
+            }
+            else
+                prevSheath = false;
+
             if (nextAnimData != null && (!IsRunningCustomAnim || (currentCustomAnim.canBeInterrupted && currentCustomAnim != nextAnimData)))
                 SetCustomAnim(nextAnimData, direction);
         }
 
         animator.SetFloat("StrafeDir", PercentClockwise(transform.forward.xz().normalized, input.normalized));
         animator.SetInteger("WeaponType", weaponType);
-        // animator.SetInteger("SheathType", (int)sheathType);
         animator.SetBool("LeftHanded", leftHanded);
+        animator.SetBool("HasShield", hasShield);
 
         //Custom anim stuff
-        animator.SetLayerWeight(animator.GetLayerIndex("Upperbody"), (IsRunningCustomAnim && currentCustomAnim.isUpperbody) ? 1 : 0);
-        animator.SetBool("CustomAnim", IsRunningCustomAnim && currentCustomAnim.blockAnimation);
+        animator.SetLayerWeight(animator.GetLayerIndex("Upperbody"), ((IsRunningCustomAnim && currentCustomAnim.isUpperbody) || EquipSlots.isHeld) ? 1 : 0);
+        animator.SetBool("BlockMain", IsRunningCustomAnim && currentCustomAnim.blockMainLayerAnim);
+        animator.SetBool("BlockUpper", (IsRunningCustomAnim && currentCustomAnim.blockUpperLayerAnim) || isBlocking);
+        animator.SetBool("Block", isBlocking);
         Character.blockMovement = (IsRunningCustomAnim && currentCustomAnim.blockMovement) || isStrafing;
         Character.blockRotation = (IsRunningCustomAnim && currentCustomAnim.blockRotation) || isStrafing;
         if (IsRunningCustomAnim)
@@ -142,15 +179,14 @@ public class HumanoidCustomMoves : MonoBehaviour
     }
     private void SetCustomAnim(CustomAnimationData customAnim, Vector2 dir)
     {
-        // if (!IsRunningCustomAnim || (currentCustomAnim.canBeInterrupted && currentCustomAnim != customAnim))
-            toggledCustomAnim = false;
+        toggledCustomAnim = false;
 
         currentCustomAnim = customAnim;
         customAnimStartTime = Time.time;
         customAnimStartDir = dir;
         customAnimStartPos = transform.position.xz();
     }
-    private static int GetWeaponType(ItemData leftHandItem, ItemData rightHandItem, out bool leftHanded)
+    private static int GetWeaponType(ItemData leftHandItem, ItemData rightHandItem, out bool leftHanded, out bool hasShield)
     {
         WeaponData leftHandWeapon = null;
         WeaponData rightHandWeapon = null;
@@ -160,18 +196,21 @@ public class HumanoidCustomMoves : MonoBehaviour
             rightHandWeapon = (WeaponData)rightHandItem;
 
         leftHanded = false;
+        hasShield = false;
 
-        int weaponType = -1;
+        int weaponType = WEAPON_NONE;
         if (rightHandWeapon != null && leftHandWeapon != null)
         {
             if (rightHandWeapon.type == WeaponType.shield && leftHandWeapon.type != WeaponType.shield)
             {
                 leftHanded = true;
                 weaponType = (int)leftHandWeapon.type;
+                hasShield = true;
             }
             else if (leftHandWeapon.type == WeaponType.shield && rightHandWeapon.type != WeaponType.shield)
             {
                 weaponType = (int)rightHandWeapon.type;
+                hasShield = true;
             }
             else
             {
@@ -207,5 +246,8 @@ public class HumanoidCustomMoves : MonoBehaviour
     public void WeaponSwitch()
     {
         EquipSlots.isHeld = !EquipSlots.isHeld;
+    }
+    public void Shoot()
+    {
     }
 }

@@ -29,6 +29,8 @@ public class PlayerInputBridge : MonoBehaviour
         controlValues.SetToggle("triangleBtn", player.GetButton("EnterExitVehicle"));
         controlValues.SetToggle("circleBtn", player.GetButton("Roll"));
         controlValues.SetToggle("squareBtn", player.GetButton("Attack"));
-        controlValues.SetToggle("l2Btn", player.GetButton("Strafe"));
+        controlValues.SetToggle("r1Btn", player.GetButton("Sheath"));
+        controlValues.SetToggle("l2Btn", player.GetButton("Block"));
+        controlValues.SetToggle("r2Btn", player.GetButton("Strafe"));
     }
 }

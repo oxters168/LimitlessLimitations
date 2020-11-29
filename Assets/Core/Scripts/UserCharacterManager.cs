@@ -68,7 +68,7 @@ public class UserCharacterManager : MonoBehaviour
             inputBridge.playerId = playerId;
             inputBridge.controlledObject = vehicle.gameObject;
 
-            followCamera.distance = 30;
+            followCamera.distance = 20;
         }
         else
         {
@@ -76,7 +76,7 @@ public class UserCharacterManager : MonoBehaviour
             if (inputBridge != null)
                 GameObject.Destroy(inputBridge);
 
-            followCamera.distance = 10;
+            followCamera.distance = 5;
         }
 
         HideCharacter(vehicle == null);

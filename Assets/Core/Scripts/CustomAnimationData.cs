@@ -16,8 +16,10 @@ public class CustomAnimationData : ScriptableObject
     public bool blockMovement;
     [Tooltip("If set to true, will stop rotation through direct input")]
     public bool blockRotation;
-    [Tooltip("If set to true, will block other animations from running at the same time")]
-    public bool blockAnimation;
+    [Tooltip("If set to true, will block other animations from running at the same time on the main layer of the animator")]
+    public bool blockMainLayerAnim;
+    [Tooltip("If set to true, will block other animations from running at the same time on the upperbody layer of the animator")]
+    public bool blockUpperLayerAnim;
 
     [Space(10), Tooltip("How much distance to cover over the execution time")]
     public float distanceTravelled;

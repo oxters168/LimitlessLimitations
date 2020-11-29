@@ -1293,6 +1293,7 @@ MonoBehaviour:
   rollData: {fileID: 11400000, guid: 65dbfcf001058b64389aad4bb9c11e4e, type: 2}
   attackData: {fileID: 11400000, guid: 055533cc35667704387e0ba691945db8, type: 2}
   unsheathData: {fileID: 11400000, guid: 2f2d1508ec742e24bac84ef260f8fbfa, type: 2}
+  sheathData: {fileID: 11400000, guid: 4ed0deb77c895554fa6e086efe6786e6, type: 2}
   testWeaponL: {fileID: 0}
   testWeaponR: {fileID: 0}
 --- !u!114 &2275450681597448393

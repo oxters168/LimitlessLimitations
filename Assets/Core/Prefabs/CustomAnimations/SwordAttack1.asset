@@ -18,7 +18,8 @@ MonoBehaviour:
   canBeInterrupted: 1
   blockMovement: 0
   blockRotation: 0
-  blockAnimation: 0
+  blockMainLayerAnim: 0
+  blockUpperLayerAnim: 1
   distanceTravelled: 0
   travelMap:
     serializedVersion: 2

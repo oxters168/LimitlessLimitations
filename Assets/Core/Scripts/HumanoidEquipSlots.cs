@@ -12,7 +12,7 @@ public class HumanoidEquipSlots : MonoBehaviour
 
     void Update()
     {
-        if (isHeld && !prevIsHeld)
+        if (isHeld != prevIsHeld)
         {
             prevIsHeld = isHeld;
             RefreshSlots();
