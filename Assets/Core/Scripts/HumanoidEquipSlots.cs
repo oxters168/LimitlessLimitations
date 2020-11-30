@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityHelpers;
 
 public class HumanoidEquipSlots : MonoBehaviour
 {
@@ -12,6 +13,8 @@ public class HumanoidEquipSlots : MonoBehaviour
 
     void Update()
     {
+        RefreshAnchors();
+
         if (isHeld != prevIsHeld)
         {
             prevIsHeld = isHeld;
@@ -46,6 +49,25 @@ public class HumanoidEquipSlots : MonoBehaviour
             shoulder.currentItem = null;
             hip.currentItem = null;
             hand.currentItem = null;
+        }
+    }
+
+    private void RefreshAnchors()
+    {
+        var wildcards = new ItemWildcard[] { leftHandWildcard, rightHandWildcard, leftShoulderWildcard, rightShoulderWildcard, leftHipWildcard, rightHipWildcard };
+        HumanoidAnchors currentAnchors = null;
+        for (int i = 0; i < wildcards.Length; i++)
+        {
+            var currentMimic = wildcards[i].GetComponent<MimicTransform>();
+            if (currentMimic.other == null || !currentMimic.other.gameObject.activeInHierarchy)
+            {
+                if (currentAnchors == null)
+                    currentAnchors = GetComponentInChildren<HumanoidAnchors>();
+
+                string anchorName = currentMimic.name;
+                anchorName = anchorName.Replace("Wildcard", "Anchor");
+                currentMimic.other = currentAnchors.GetAnchor(anchorName);
+            }
         }
     }
 }

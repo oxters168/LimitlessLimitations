@@ -45,7 +45,7 @@ public class AnimateAndMoveCharacter : ValuedObject
     
     public MovementState currentMovementState { get; private set; }
     private Animator _animator;
-    private Animator animator { get { if (_animator == null) _animator = GetComponent<Animator>(); return _animator; } }
+    private Animator animator { get { if (_animator == null || !_animator.gameObject.activeInHierarchy) _animator = GetComponentInChildren<Animator>(); return _animator; } }
 
     private Vector2 input;
     private Vector2 prevInput;

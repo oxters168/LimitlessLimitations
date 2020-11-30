@@ -13,7 +13,7 @@ public class HumanoidCustomMoves : MonoBehaviour
     private HumanoidEquipSlots EquipSlots { get { if (_equipSlots == null) _equipSlots = GetComponent<HumanoidEquipSlots>(); return _equipSlots; } }
 
     private Animator _animator;
-    private Animator animator { get { if (_animator == null) _animator = GetComponent<Animator>(); return _animator; } }
+    private Animator animator { get { if (_animator == null || !_animator.gameObject.activeInHierarchy) _animator = GetComponentInChildren<Animator>(); return _animator; } }
 
     [Tooltip("How fast the character moves when strafing (in meters per second)")]
     public float strafeSpeed = 3.2f;
