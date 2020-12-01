@@ -32,6 +32,8 @@ public class AnimateAndMoveCharacter : ValuedObject
 
     [Space(10), Tooltip("The height of the ray from world 0 that will cast down and find the ground")]
     public float castingHeight = 100;
+    // [Tooltip("The radius of the sphere that will cushion the character from other objects")]
+    // public float collisionRadius = 3;
 
     [Space(10), Tooltip("Blocks the input from moving the character")]
     public bool blockMovement;
@@ -51,6 +53,9 @@ public class AnimateAndMoveCharacter : ValuedObject
     private Vector2 prevInput;
     private float inputStartTime;
     private bool jog;
+
+    private Vector2 prevPosition;
+    private bool isColliding;
 
     void Update()
     {
@@ -76,17 +81,86 @@ public class AnimateAndMoveCharacter : ValuedObject
         AdjustPosition(currentSpeed);
 
         prevInput = input;
+        isColliding = false;
     }
+    void OnTriggerStay(Collider other)
+    {
+        isColliding = true;
 
-    // public void RunCustomAnim(CustomAnimationData animData)
+        var characterBounds = transform.GetTotalBounds(Space.World);
+        var otherBounds = other.transform.GetTotalBounds(Space.World);
+        Vector2 offset = characterBounds.center.xz() - otherBounds.center.xz();
+        Vector2 dir = (offset).normalized;
+        
+        float distance = (transform.position.xz() - prevPosition).magnitude;
+        if (distance < float.Epsilon)
+            distance = 0.1f;
+        Vector2 borderPosition = transform.position.xz() + dir * distance;
+
+        // Vector2 breach = characterBounds.center.xz() - otherBounds.center.xz();
+
+        // Vector2 borderPosition = transform.position.xz();
+        // float xOffset = Mathf.Abs(breach.x) - otherBounds.extents.x;
+        // float yOffset = Mathf.Abs(breach.y) - otherBounds.extents.z;
+        // bool xAxis = false;
+        // if (xOffset < -float.Epsilon && yOffset < -float.Epsilon)
+        //     xAxis = true;
+        // else if (yOffset < -float.Epsilon)
+        //     xAxis = true;
+        
+        // if (xAxis)
+        //     borderPosition.x = otherBounds.center.x + (otherBounds.extents.x + collisionRadius) * Mathf.Sign(breach.x) * 1.001f;
+        // else
+        //     borderPosition.y = otherBounds.center.z + (otherBounds.extents.z + collisionRadius) * Mathf.Sign(breach.y) * 1.001f;
+
+        // Vector3 axis0 = worldAxes[0];
+        // Vector3 axis1 = worldAxes[1];
+        // float axis0Mag = otherBounds.extents.Multiply(axis0).magnitude;
+        // float axis1Mag = otherBounds.extents.Multiply(axis1).magnitude;
+        // Debug.DrawRay(otherBounds.center, axis0 * axis0Mag, Color.blue, 1);
+        // Debug.DrawRay(otherBounds.center, axis1 * axis1Mag, Color.green, 1);
+        // Debug.DrawRay(otherBounds.center, dir, Color.white, 1);
+
+
+        // float theta = Vector2.up.GetClockwiseAngle(dir.xz().normalized);
+        
+        // Vector3 axis0 = worldAxes[0];
+        // Vector3 axis1 = worldAxes[1];
+        // if ((theta <= 135 && theta >= 45) || (theta >= 225 && theta <= 315))
+        // {
+        //     axis0 = worldAxes[1];
+        //     axis1 = worldAxes[0];
+        // }
+        // else
+        // {
+        //     axis0 = worldAxes[0];
+        //     axis1 = worldAxes[1];
+        // }
+        // float a = otherBounds.extents.Multiply(axis0).magnitude;
+        // float b = otherBounds.extents.Multiply(axis1).magnitude;
+        // // float x = a * Mathf.Cos(theta * Mathf.Deg2Rad);
+        // // float y = b * Mathf.Sin(theta * Mathf.Deg2Rad);
+        // float tanTheta = Mathf.Tan(theta * Mathf.Deg2Rad);
+        // float x = (a * b) / Mathf.Sqrt(b * b + a * a * tanTheta * tanTheta);
+        // float y = (a * b) / Mathf.Sqrt(a * a + (b * b) / (tanTheta * tanTheta));
+        // // float x = a * dir.Multiply(axis0).magnitude;
+        // // float y = b * dir.Multiply(axis1).magnitude;
+        // // float radius = (x * x) / (a * a) + (y * y) / (b * b) - 1;
+        // float radius = Mathf.Sqrt(x * x + y * y);
+        // Vector3 borderPosition = otherBounds.center + dir * radius;
+        // // Vector3 borderPosition = otherBounds.center + axis0 * x * axis0Mag + axis1 * y * axis1Mag;
+        // // Vector3 borderPosition = otherBounds.center + dir.Multiply(axis0) * axis0Mag + dir.Multiply(axis1) * axis1Mag;
+
+        // Debug.DrawLine(otherBounds.center, borderPosition, Color.black, 5);
+        SetPosition(borderPosition);
+    }
+    // Bounds otherBounds;
+    // void OnDrawGizmos()
     // {
-    //     if (!IsRunningCustomAnim || currentCustomAnim.canBeInterrupted)
-    //     {
-    //         customAnimStartTime = Time.time;
-    //         customAnimStartDir = (Mathf.Abs(input.x) > float.Epsilon || Mathf.Abs(input.y) > float.Epsilon) ? input.normalized : transform.forward.xz();
-    //         customAnimStartPos = transform.position.xz();
-    //         currentCustomAnim = animData;
-    //     }
+    //     Gizmos.color = Color.green;
+    //     var worldBounds = transform.GetTotalBounds(Space.World, true);
+    //     Gizmos.DrawWireCube(worldBounds.center, worldBounds.size);
+    //     Gizmos.DrawWireCube(otherBounds.center, otherBounds.size);
     // }
 
     public static bool IsIdle(MovementState currentMovementState)
@@ -149,19 +223,7 @@ public class AnimateAndMoveCharacter : ValuedObject
     }
 
     private void ApplyValuesToAnimator()
-    {
-        // animator.SetBool("CustomAnim", IsRunningCustomAnim);
-        // if (IsRunningCustomAnim)
-        // {
-        //     if (!toggledCustomAnim)
-        //     {
-        //         animator.SetTrigger(currentCustomAnim.animationToggleName);
-        //         toggledCustomAnim = true;
-        //     }
-        // }
-        // else
-        //     toggledCustomAnim = false;
-        
+    {        
         animator.SetInteger("State", (int)currentMovementState);
     }
     private static MovementState GetMovementState(Transform transform, Vector2 currentInput, Vector2 prevInput, float idleToMoveTime, float angleDelayExempt, ref float inputStartTime, MovementState currentMovementState, bool jog, bool isUnderwater)
@@ -195,7 +257,6 @@ public class AnimateAndMoveCharacter : ValuedObject
 
     private void AdjustRotation(float currentSpeed, float maxSpeed)
     {
-        // bool customAnimOverride = IsRunningCustomAnim && currentCustomAnim.affectMovement;
         if (!blockRotation && (Mathf.Abs(input.x) > float.Epsilon || Mathf.Abs(input.y) > float.Epsilon))
         {
             float maxRotDiff = rotSpeed * Time.deltaTime;
@@ -208,32 +269,29 @@ public class AnimateAndMoveCharacter : ValuedObject
             appliedRotDiff = Mathf.Lerp(angleDiff, appliedRotDiff, speedEffect.Evaluate(Mathf.Clamp01(currentSpeed / maxSpeed)));
             transform.forward = Quaternion.AngleAxis(appliedRotDiff, Vector3.up) * transform.forward;
         }
-        // else if (customAnimOverride)
-        // {
-        //     transform.forward = customAnimStartDir.ToXZVector3();
-        // }
     }
     private void AdjustPosition(float speed)
     {
-        // bool customAnimOverride = IsRunningCustomAnim && currentCustomAnim.affectMovement;
-
         Vector3 finalPosition = transform.position;
-        if (!blockMovement && !IsIdle(currentMovementState))
+        if (!blockMovement && !isColliding && !IsIdle(currentMovementState))
         {
             float positionOffset = speed * Time.deltaTime;
 
             finalPosition += transform.forward * positionOffset;
         }
-        // else if (customAnimOverride)
-        // {
-        //     finalPosition = customAnimStartPos.ToXZVector3() + transform.forward * currentCustomAnim.distanceTravelled * currentCustomAnim.travelMap.Evaluate((Time.time - customAnimStartTime) / currentCustomAnim.executionTime);
-        // }
 
         SetPosition(finalPosition.xz());
-        // finalPosition = new Vector3(finalPosition.x, characterPosY, finalPosition.z);
-        // transform.position = finalPosition;
     }
     public void SetPosition(Vector2 position)
+    {
+        float characterPosY = GetY(position);
+
+        Vector3 nextPosition = new Vector3(position.x, characterPosY, position.y);
+
+        prevPosition = transform.position.xz();
+        transform.position = nextPosition;
+    }
+    private float GetY(Vector2 position)
     {
         float characterPosY;
         if (IsUnderwater)
@@ -243,7 +301,6 @@ public class AnimateAndMoveCharacter : ValuedObject
         }
         else
             characterPosY = GetGroundHeightAt(transform.position.xz(), castingHeight);
-
-        transform.position = new Vector3(position.x, characterPosY, position.y);
+        return characterPosY;
     }
 }
