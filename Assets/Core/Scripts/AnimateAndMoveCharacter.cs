@@ -3,13 +3,13 @@ using UnityHelpers;
 
 public class AnimateAndMoveCharacter : ValuedObject
 {
-    public enum MovementState { idle = 0, walk = 1, jog = 2, swimIdle = 3, swimStroke = 4, underwaterIdle = 5, underwaterStroke = 6 }
+    public enum MovementState { idle = 0, walk = 1, jog = 2, swimIdle = 3, swimStroke = 4, underwaterIdle = 5, underwaterStroke = 6, flyIdle = 7, flyFwd = 8 }
 
     [Tooltip("The height of the water plane in world units")]
     public float waterLevel = 7;
 
     [Space(10), Tooltip("The amount from the top of the character's bounds that stays above the water (in meters)")]
-    public float waterTip = 0.1f;
+    public float waterTip = 1;
     [Tooltip("How much being in water effects speed when walking or jogging (I don't know if trudge is actually a word, but it is now)")]
     public float trudgeEffect = 0.3f;
 
@@ -21,6 +21,10 @@ public class AnimateAndMoveCharacter : ValuedObject
     public float swimSpeed = 2f;
     [Tooltip("In meters per second")]
     public float underwaterSpeed = 3f;
+    [Tooltip("In meters per second")]
+    public float flySpeed = 20;
+    [Tooltip("How fast the character can go up/down when flying (in meters per second)")]
+    public float ascendDescendSpeed = 20;
     [Tooltip("How fast the character turns in degrees per second")]
     public float rotSpeed = 100f;
     [Tooltip("How much the current character's speed effects their rotational speed")]
@@ -29,6 +33,13 @@ public class AnimateAndMoveCharacter : ValuedObject
     public float idleToMoveTime = 0.1f;
     [Tooltip("The angle between the previous input and the current input where the idle to move delay does not apply")]
     public float idleToMoveExempt = 45;
+
+    [Space(10), Tooltip("If true the character will fly rather than walk/jog")]
+    public bool fly;
+    [Tooltip("The minimum height the character flies from the ground")]
+    public float flyMinHeight = 1.5f;
+    [Tooltip("The maximum height the character can fly up to")]
+    public float flyMaxHeight = 100f;
 
     [Space(10), Tooltip("The height of the ray from world 0 that will cast down and find the ground")]
     public float castingHeight = 100;
@@ -53,6 +64,7 @@ public class AnimateAndMoveCharacter : ValuedObject
     private Vector2 prevInput;
     private float inputStartTime;
     private bool jog;
+    public bool up, down;
 
     private Vector2 prevPosition;
     private bool isColliding;
@@ -62,17 +74,26 @@ public class AnimateAndMoveCharacter : ValuedObject
         //Retrieve input
         input = new Vector2(GetAxis("dpadHor"), GetAxis("dpadVer"));
         jog = GetToggle("crossBtn");
+        up = GetToggle("r2Btn");
+        down = GetToggle("l2Btn");
         
         //Set animator values
         ApplyValuesToAnimator();
 
         //Check is underwater
-        IsUnderwater = CheckIsUnderwater(transform, waterLevel, castingHeight, waterTip, out percentUnderwater, out _isSteppingInWater);
+        IsUnderwater = !fly && CheckIsUnderwater(transform, waterLevel, castingHeight, waterTip, out percentUnderwater, out _isSteppingInWater);
 
         //Set state
-        currentMovementState = GetMovementState(transform, input, prevInput, idleToMoveTime, idleToMoveExempt, ref inputStartTime, currentMovementState, jog, IsUnderwater);
+        currentMovementState = GetMovementState(transform, input, prevInput, idleToMoveTime, idleToMoveExempt, ref inputStartTime, currentMovementState, fly, jog, IsUnderwater);
         
-        float currentSpeed = GetCurrentSpeed(currentMovementState, walkSpeed, jogSpeed, swimSpeed, underwaterSpeed, trudgeEffect, percentUnderwater, IsSteppingInWater);
+        float currentSpeed = GetCurrentSpeed(currentMovementState, walkSpeed, jogSpeed, swimSpeed, underwaterSpeed, flySpeed, trudgeEffect, percentUnderwater, IsSteppingInWater);
+
+        //Affect speed based on joystick if flying
+        if (fly)
+        {
+            float inputAffect = input.ToCircle().magnitude;
+            currentSpeed *= inputAffect;
+        }
 
         //Set transform rotation
         AdjustRotation(currentSpeed, Mathf.Max(walkSpeed, jogSpeed, swimSpeed, underwaterSpeed));
@@ -154,14 +175,6 @@ public class AnimateAndMoveCharacter : ValuedObject
         // Debug.DrawLine(otherBounds.center, borderPosition, Color.black, 5);
         SetPosition(borderPosition);
     }
-    // Bounds otherBounds;
-    // void OnDrawGizmos()
-    // {
-    //     Gizmos.color = Color.green;
-    //     var worldBounds = transform.GetTotalBounds(Space.World, true);
-    //     Gizmos.DrawWireCube(worldBounds.center, worldBounds.size);
-    //     Gizmos.DrawWireCube(otherBounds.center, otherBounds.size);
-    // }
 
     public static bool IsIdle(MovementState currentMovementState)
     {
@@ -170,7 +183,7 @@ public class AnimateAndMoveCharacter : ValuedObject
     private static bool CheckIsUnderwater(Transform transform, float waterLevel, float castingHeight, float waterTip, out float percentUnderwater, out bool isSteppingInWater)
     {
         float groundHeight = GetGroundHeightAt(transform.position.xz(), castingHeight);
-        var characterBounds = transform.GetTotalBounds(Space.World);
+        var characterBounds = transform.GetTotalBounds(Space.Self);
         float characterNeck = groundHeight + (characterBounds.size.y - waterTip);
         percentUnderwater = Mathf.Clamp01((waterLevel - groundHeight) / (characterBounds.size.y - waterTip));
         isSteppingInWater = (groundHeight - waterLevel) < 0;
@@ -188,7 +201,7 @@ public class AnimateAndMoveCharacter : ValuedObject
         }
         return groundHeight;
     }
-    private static float GetCurrentSpeed(MovementState currentMovementState, float walkSpeed, float jogSpeed, float swimSpeed, float underwaterSpeed, float trudgeEffect, float percentUnderwater, bool isSteppingInWater)
+    private static float GetCurrentSpeed(MovementState currentMovementState, float walkSpeed, float jogSpeed, float swimSpeed, float underwaterSpeed, float flySpeed, float trudgeEffect, float percentUnderwater, bool isSteppingInWater)
     {
         float speed = 0;
         float trudgeMultiplier = 1 - (1 - trudgeEffect) * percentUnderwater;
@@ -205,6 +218,9 @@ public class AnimateAndMoveCharacter : ValuedObject
                 break;
             case MovementState.underwaterStroke:
                 speed = underwaterSpeed;
+                break;
+            case MovementState.flyFwd:
+                speed = flySpeed;
                 break;
         }
         return speed;
@@ -223,10 +239,10 @@ public class AnimateAndMoveCharacter : ValuedObject
     }
 
     private void ApplyValuesToAnimator()
-    {        
+    {
         animator.SetInteger("State", (int)currentMovementState);
     }
-    private static MovementState GetMovementState(Transform transform, Vector2 currentInput, Vector2 prevInput, float idleToMoveTime, float angleDelayExempt, ref float inputStartTime, MovementState currentMovementState, bool jog, bool isUnderwater)
+    private static MovementState GetMovementState(Transform transform, Vector2 currentInput, Vector2 prevInput, float idleToMoveTime, float angleDelayExempt, ref float inputStartTime, MovementState currentMovementState, bool fly, bool jog, bool isUnderwater)
     {
         MovementState resultState = currentMovementState;
         bool hasInput = !currentInput.IsZero();
@@ -240,13 +256,17 @@ public class AnimateAndMoveCharacter : ValuedObject
 
         if (hasInput && ((Time.time - inputStartTime) >= idleToMoveTime || angleBetween <= Mathf.Abs(angleDelayExempt)))
         {
-            if (isUnderwater)
+            if (fly)
+                resultState = MovementState.flyFwd;
+            else if (isUnderwater)
                 resultState = MovementState.swimStroke;
             else if (jog)
                 resultState = MovementState.jog;
             else
                 resultState = MovementState.walk;
         }
+        else if (fly)
+            resultState = MovementState.flyIdle;
         else if (isUnderwater)
             resultState = MovementState.swimIdle;
         else
@@ -294,13 +314,27 @@ public class AnimateAndMoveCharacter : ValuedObject
     private float GetY(Vector2 position)
     {
         float characterPosY;
-        if (IsUnderwater)
+        if (fly)
         {
-            var bounds = transform.GetTotalBounds(Space.World);
+            float nextY = transform.position.y;
+            if (up)
+                nextY += ascendDescendSpeed * Time.deltaTime;
+            else if (down)
+                nextY -= ascendDescendSpeed * Time.deltaTime;
+
+            float groundHeight = GetGroundHeightAt(position, castingHeight);
+            nextY = Mathf.Max(groundHeight + flyMinHeight, waterLevel + flyMinHeight, nextY);
+            nextY = Mathf.Min(nextY, flyMaxHeight);
+            characterPosY = nextY;
+        }
+        else if (IsUnderwater)
+        {
+            var bounds = transform.GetTotalBounds(Space.Self);
             characterPosY = waterLevel - (bounds.size.y - waterTip);
         }
         else
-            characterPosY = GetGroundHeightAt(transform.position.xz(), castingHeight);
+            characterPosY = GetGroundHeightAt(position, castingHeight);
+            
         return characterPosY;
     }
 }

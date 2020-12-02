@@ -62,6 +62,9 @@ public class HumanoidCustomMoves : MonoBehaviour
             EquipSlots.SetItem(testWeaponR, HumanoidEquipSlots.SlotSpace.rightHand);
         }
 
+        if ((Character.IsUnderwater || Character.fly) && EquipSlots.isHeld)
+            EquipSlots.isHeld = false;
+
         if (Time.time - lastAttack > currentAttackComboTime)
             attackCombo = 0;
         attackCombo %= 3;
@@ -73,9 +76,9 @@ public class HumanoidCustomMoves : MonoBehaviour
                 
         //Input stuff
         Vector2 input = new Vector2(Character.GetAxis("dpadHor"), Character.GetAxis("dpadVer"));
-        isStrafing = Character.GetToggle("r2Btn") && !Character.IsUnderwater;
-        isBlocking = Character.GetToggle("l2Btn") && !Character.IsUnderwater;
-        if ((!IsRunningCustomAnim || currentCustomAnim.canBeInterrupted) && !Character.IsUnderwater)
+        isStrafing = Character.GetToggle("r2Btn") && !Character.IsUnderwater && !Character.fly;
+        isBlocking = Character.GetToggle("l2Btn") && !Character.IsUnderwater && !Character.fly;
+        if ((!IsRunningCustomAnim || currentCustomAnim.canBeInterrupted) && !Character.IsUnderwater && !Character.fly)
         {
             CustomAnimationData nextAnimData = null;
             Vector2 direction = transform.forward.xz().normalized;

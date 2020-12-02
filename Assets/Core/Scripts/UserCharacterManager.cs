@@ -10,6 +10,7 @@ public class UserCharacterManager : MonoBehaviour
     public ValuedObject characterPrefab;
     private ValuedObject characterInstance;
 
+    public bool InVehicle { get { return currentVehicle != null; } }
     public ValuedObject currentVehicle;
     public ValuedObject vehicleInVicinity;
     private bool enteredExited;
@@ -25,15 +26,48 @@ public class UserCharacterManager : MonoBehaviour
 
         FollowTransform(characterInstance.transform);
     }
+    void Update()
+    {
+        SetCameraValues();
+    }
     void FixedUpdate()
     {
         FindVehicleInVicinity();
         EnterExitVehicle();
     }
 
+    private void SetCameraValues()
+    {
+        float height;
+        float minDistance;
+        float maxDistance;
+
+        if (InVehicle)
+        {
+            height = currentVehicle.transform.position.y;
+            minDistance = 20;
+            maxDistance = 40;
+        }
+        else
+        {
+            height = characterInstance.transform.position.y;
+            minDistance = 5;
+            maxDistance = 40;
+        }
+        
+        float minAngle = 45;
+        float maxAngle = 90;
+        float minHeight = 15;
+        float maxHeight = 100;
+        float percentHeight = Mathf.Clamp01((height - minHeight) / maxHeight);
+        float currentDistance = (maxDistance - minDistance) * percentHeight + minDistance;
+        float currentAngle = (maxAngle - minAngle) * percentHeight + minAngle;
+        followCamera.distance = Mathf.Lerp(followCamera.distance, currentDistance, Time.deltaTime * 5);
+        followCamera.rightAngle = Mathf.Lerp(followCamera.rightAngle, currentAngle, Time.deltaTime * 5);
+    }
     private void FindVehicleInVicinity()
     {
-        if (currentVehicle == null)
+        if (!InVehicle)
         {
             RaycastHit[] raycastHits = Physics.BoxCastAll(characterInstance.transform.position + Vector3.up, new Vector3(2.5f, 1f, 2.5f), Vector3.up, Quaternion.identity, 1f, LayerMask.GetMask("Vehicle"));
             if (raycastHits.Length > 0)
@@ -48,12 +82,12 @@ public class UserCharacterManager : MonoBehaviour
     }
     private void EnterExitVehicle()
     {
-        if ((currentVehicle == null && vehicleInVicinity != null && characterInstance.GetToggle("triangleBtn")) || (currentVehicle != null && currentVehicle.GetToggle("triangleBtn")))
+        if ((!InVehicle && vehicleInVicinity != null && characterInstance.GetToggle("triangleBtn")) || (InVehicle && currentVehicle.GetToggle("triangleBtn")))
         {
             if (!enteredExited)
             {
                 enteredExited = true;
-                SetVehicle(currentVehicle == null ? vehicleInVicinity : null);
+                SetVehicle(!InVehicle ? vehicleInVicinity : null);
             }
         }
         else
@@ -67,16 +101,12 @@ public class UserCharacterManager : MonoBehaviour
             var inputBridge = vehicle.gameObject.AddComponent<PlayerInputBridge>();
             inputBridge.playerId = playerId;
             inputBridge.controlledObject = vehicle.gameObject;
-
-            followCamera.distance = 20;
         }
         else
         {
             var inputBridge = currentVehicle.gameObject.GetComponent<PlayerInputBridge>();
             if (inputBridge != null)
                 GameObject.Destroy(inputBridge);
-
-            followCamera.distance = 5;
         }
 
         HideCharacter(vehicle == null);

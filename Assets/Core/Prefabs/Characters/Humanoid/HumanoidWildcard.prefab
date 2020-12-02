@@ -253,12 +253,14 @@ MonoBehaviour:
       point: {x: 0, y: 0, z: 0}
       orientation: {x: 0, y: 0, z: 0, w: 0}
   waterLevel: 14
-  waterTip: 0.6
+  waterTip: 1
   trudgeEffect: 0.3
   walkSpeed: 1.5
   jogSpeed: 4.70779
   swimSpeed: 2
   underwaterSpeed: 3
+  flySpeed: 20
+  ascendDescendSpeed: 20
   rotSpeed: 100
   speedEffect:
     serializedVersion: 2
@@ -295,9 +297,14 @@ MonoBehaviour:
     m_RotationOrder: 4
   idleToMoveTime: 0.1
   idleToMoveExempt: 45
+  fly: 0
+  flyMinHeight: 1.5
+  flyMaxHeight: 100
   castingHeight: 100
   blockMovement: 0
   blockRotation: 0
+  up: 0
+  down: 0
 --- !u!114 &3553332597518836537
 MonoBehaviour:
   m_ObjectHideFlags: 0
