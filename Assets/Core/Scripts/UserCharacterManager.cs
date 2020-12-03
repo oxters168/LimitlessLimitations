@@ -4,7 +4,8 @@ using UnityHelpers;
 public class UserCharacterManager : MonoBehaviour
 {
     public int playerId;
-    public OrbitCameraController followCamera;
+    public OrbitCameraController cameraPrefab;
+    private OrbitCameraController followCamera;
     public MimicTransform waterPrefab;
     private MimicTransform waterInstance;
     public ValuedObject characterPrefab;
@@ -23,6 +24,8 @@ public class UserCharacterManager : MonoBehaviour
         bridge.controlledObject = characterInstance.gameObject;
 
         waterInstance = GameObject.Instantiate(waterPrefab);
+
+        followCamera = GameObject.Instantiate(cameraPrefab);
 
         FollowTransform(characterInstance.transform);
     }
@@ -54,7 +57,7 @@ public class UserCharacterManager : MonoBehaviour
             minDistance = 5;
             maxDistance = 40;
         }
-        
+
         float minAngle = 45;
         float maxAngle = 90;
         float minHeight = 15;
