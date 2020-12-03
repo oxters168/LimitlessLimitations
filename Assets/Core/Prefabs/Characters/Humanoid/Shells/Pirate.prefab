@@ -5461,6 +5461,7 @@ MonoBehaviour:
   rightShoulderAnchor: {fileID: 1759616572217822253}
   leftHipAnchor: {fileID: 3926571009720622390}
   rightHipAnchor: {fileID: 8374294903707855298}
+  shellRenderer: {fileID: 4173802071802511969}
 --- !u!95 &4827656914082659070
 Animator:
   serializedVersion: 3

@@ -25,8 +25,8 @@ public class HumanoidAI : MonoBehaviour
 
         // if (!input.IsZero())
         // {
-            InputAI.SetAxis("dpadHor", input.x);
-            InputAI.SetAxis("dpadVer", input.y);
+            InputAI.SetAxis("horizontal", input.x);
+            InputAI.SetAxis("vertical", input.y);
             InputAI.SetToggle("crossBtn", run);
         // }
     }

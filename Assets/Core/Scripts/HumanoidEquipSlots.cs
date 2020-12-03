@@ -55,18 +55,18 @@ public class HumanoidEquipSlots : MonoBehaviour
     private void RefreshAnchors()
     {
         var wildcards = new ItemWildcard[] { leftHandWildcard, rightHandWildcard, leftShoulderWildcard, rightShoulderWildcard, leftHipWildcard, rightHipWildcard };
-        HumanoidAnchors currentAnchors = null;
+        HumanoidShell currentShell = null;
         for (int i = 0; i < wildcards.Length; i++)
         {
             var currentMimic = wildcards[i].GetComponent<MimicTransform>();
             if (currentMimic.other == null || !currentMimic.other.gameObject.activeInHierarchy)
             {
-                if (currentAnchors == null)
-                    currentAnchors = GetComponentInChildren<HumanoidAnchors>();
+                if (currentShell == null)
+                    currentShell = GetComponentInChildren<HumanoidShell>();
 
                 string anchorName = currentMimic.name;
                 anchorName = anchorName.Replace("Wildcard", "Anchor");
-                currentMimic.other = currentAnchors.GetAnchor(anchorName);
+                currentMimic.other = currentShell.GetAnchor(anchorName);
             }
         }
     }

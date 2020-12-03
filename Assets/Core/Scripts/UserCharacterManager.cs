@@ -8,13 +8,15 @@ public class UserCharacterManager : MonoBehaviour
     private OrbitCameraController followCamera;
     public MimicTransform waterPrefab;
     private MimicTransform waterInstance;
-    public ValuedObject characterPrefab;
-    private ValuedObject characterInstance;
+    public AnimateAndMoveCharacter characterPrefab;
+    private AnimateAndMoveCharacter characterInstance;
 
     public bool InVehicle { get { return currentVehicle != null; } }
     public ValuedObject currentVehicle;
     public ValuedObject vehicleInVicinity;
     private bool enteredExited;
+
+    private bool astralled;
 
     void Start()
     {
@@ -35,6 +37,8 @@ public class UserCharacterManager : MonoBehaviour
     }
     void FixedUpdate()
     {
+        EnterExitAstral();
+
         FindVehicleInVicinity();
         EnterExitVehicle();
     }
@@ -68,6 +72,32 @@ public class UserCharacterManager : MonoBehaviour
         followCamera.distance = Mathf.Lerp(followCamera.distance, currentDistance, Time.deltaTime * 5);
         followCamera.rightAngle = Mathf.Lerp(followCamera.rightAngle, currentAngle, Time.deltaTime * 5);
     }
+
+    private void EnterExitAstral()
+    {
+        if (characterInstance.GetToggle("down"))
+        {
+            if (!characterInstance.astral && !characterInstance.InAstral && !InVehicle && !characterInstance.IsUnderwater)
+            {
+                if (!astralled)
+                {
+                    characterInstance.astral = true;
+                    astralled = true;
+                }
+            }
+
+            if (characterInstance.astral && characterInstance.InAstral)
+            {
+                if (!astralled)
+                {
+                    characterInstance.astral = false;
+                    astralled = true;
+                }
+            }
+        }
+        else
+            astralled = false;
+    }
     private void FindVehicleInVicinity()
     {
         if (!InVehicle)
@@ -85,7 +115,7 @@ public class UserCharacterManager : MonoBehaviour
     }
     private void EnterExitVehicle()
     {
-        if ((!InVehicle && vehicleInVicinity != null && characterInstance.GetToggle("triangleBtn")) || (InVehicle && currentVehicle.GetToggle("triangleBtn")))
+        if (!characterInstance.astral && ((!InVehicle && vehicleInVicinity != null && characterInstance.GetToggle("triangleBtn")) || (InVehicle && currentVehicle.GetToggle("triangleBtn"))))
         {
             if (!enteredExited)
             {

@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
 
-public class HumanoidAnchors : MonoBehaviour
+public class HumanoidShell : MonoBehaviour
 {
     public Transform leftHandAnchor, rightHandAnchor, leftShoulderAnchor, rightShoulderAnchor, leftHipAnchor, rightHipAnchor;
+    public Renderer shellRenderer;
 
     private HumanoidCustomMoves _combatLink;
     private HumanoidCustomMoves CombatLink { get { if (_combatLink == null) _combatLink = GetComponentInParent<HumanoidCustomMoves>(); return _combatLink; } }

@@ -23,8 +23,8 @@ public class PlayerInputBridge : MonoBehaviour
         float x = player.GetAxis("Horizontal");
         float y = player.GetAxis("Vertical");
 
-        controlValues.SetAxis("dpadHor", x);
-        controlValues.SetAxis("dpadVer", y);
+        controlValues.SetAxis("horizontal", x);
+        controlValues.SetAxis("vertical", y);
         controlValues.SetToggle("crossBtn", player.GetButton("Jog"));
         controlValues.SetToggle("triangleBtn", player.GetButton("EnterExitVehicle"));
         controlValues.SetToggle("circleBtn", player.GetButton("Roll"));
@@ -32,5 +32,6 @@ public class PlayerInputBridge : MonoBehaviour
         controlValues.SetToggle("r1Btn", player.GetButton("Sheath"));
         controlValues.SetToggle("l2Btn", player.GetButton("Block"));
         controlValues.SetToggle("r2Btn", player.GetButton("Strafe"));
+        controlValues.SetToggle("down", player.GetButton("ToggleAstral"));
     }
 }

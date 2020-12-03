@@ -168,14 +168,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   values:
     inputValues:
-    - name: dpadHor
+    - name: horizontal
       storedTypes: 1
       axis: 0
       toggle: 0
       direction: {x: 0, y: 0, z: 0}
       point: {x: 0, y: 0, z: 0}
       orientation: {x: 0, y: 0, z: 0, w: 0}
-    - name: dpadVer
+    - name: vertical
       storedTypes: 1
       axis: 0
       toggle: 0
@@ -252,6 +252,34 @@ MonoBehaviour:
       direction: {x: 0, y: 0, z: 0}
       point: {x: 0, y: 0, z: 0}
       orientation: {x: 0, y: 0, z: 0, w: 0}
+    - name: up
+      storedTypes: 2
+      axis: 0
+      toggle: 0
+      direction: {x: 0, y: 0, z: 0}
+      point: {x: 0, y: 0, z: 0}
+      orientation: {x: 0, y: 0, z: 0, w: 0}
+    - name: down
+      storedTypes: 2
+      axis: 0
+      toggle: 0
+      direction: {x: 0, y: 0, z: 0}
+      point: {x: 0, y: 0, z: 0}
+      orientation: {x: 0, y: 0, z: 0, w: 0}
+    - name: left
+      storedTypes: 2
+      axis: 0
+      toggle: 0
+      direction: {x: 0, y: 0, z: 0}
+      point: {x: 0, y: 0, z: 0}
+      orientation: {x: 0, y: 0, z: 0, w: 0}
+    - name: right
+      storedTypes: 2
+      axis: 0
+      toggle: 0
+      direction: {x: 0, y: 0, z: 0}
+      point: {x: 0, y: 0, z: 0}
+      orientation: {x: 0, y: 0, z: 0, w: 0}
   waterLevel: 14
   waterTip: 1
   trudgeEffect: 0.3
@@ -297,7 +325,10 @@ MonoBehaviour:
     m_RotationOrder: 4
   idleToMoveTime: 0.1
   idleToMoveExempt: 45
-  fly: 0
+  astralMaterial: {fileID: 2100000, guid: 4ceb6068f99cd1246bd7d6feec2a93ac, type: 2}
+  astral: 0
+  astralShiftDuration: 2
+  canFly: 1
   flyMinHeight: 1.5
   flyMaxHeight: 100
   castingHeight: 100
