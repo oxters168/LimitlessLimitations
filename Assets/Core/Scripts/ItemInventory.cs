@@ -1,18 +1,12 @@
-﻿using System.Collections;
+﻿using UnityEngine;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class ItemInventory : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    private List<ItemData> items = new List<ItemData>();
 
-    // Update is called once per frame
-    void Update()
+    public ItemData[] GetItems()
     {
-        
+        return items.ToArray();
     }
 }

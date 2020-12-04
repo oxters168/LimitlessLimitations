@@ -62,7 +62,7 @@ public class HumanoidCustomMoves : MonoBehaviour
             EquipSlots.SetItem(testWeaponR, HumanoidEquipSlots.SlotSpace.rightHand);
         }
 
-        if ((Character.IsUnderwater || Character.asleep || Character.astral || Character.InAstral || Character.IsFlying) && EquipSlots.isHeld)
+        if ((Character.IsUnderwater || Character.astral || Character.InAstral || Character.IsFlying) && EquipSlots.isHeld)
             EquipSlots.isHeld = false;
 
         if (Time.time - lastAttack > currentAttackComboTime)
@@ -76,12 +76,12 @@ public class HumanoidCustomMoves : MonoBehaviour
                 
         //Input stuff
         Vector2 input = new Vector2(Character.GetAxis("horizontal"), Character.GetAxis("vertical"));
-        isStrafing = Character.GetToggle("r2Btn") && !Character.IsUnderwater && !Character.asleep && !Character.astral && !Character.InAstral && !Character.IsFlying;
-        isBlocking = Character.GetToggle("l2Btn") && !Character.IsUnderwater && !Character.asleep && !Character.astral && !Character.InAstral && !Character.IsFlying;
-        if ((!IsRunningCustomAnim || currentCustomAnim.canBeInterrupted) && !Character.IsUnderwater && !Character.asleep && !Character.astral && !Character.InAstral && !Character.IsFlying)
+        isStrafing = Character.GetToggle("r2Btn") && !Character.IsUnderwater && !Character.astral && !Character.InAstral && !Character.IsFlying;
+        isBlocking = Character.GetToggle("l2Btn") && !Character.IsUnderwater && !Character.astral && !Character.InAstral && !Character.IsFlying;
+        if ((!IsRunningCustomAnim || currentCustomAnim.canBeInterrupted) && !Character.IsUnderwater && !Character.astral && !Character.InAstral && !Character.IsFlying)
         {
             CustomAnimationData nextAnimData = null;
-            Vector2 direction = transform.forward.xz().normalized;
+            Vector2 direction = Character.mainShells.transform.forward.xz().normalized;
 
             if (Character.GetToggle("circleBtn"))
             {
@@ -134,7 +134,7 @@ public class HumanoidCustomMoves : MonoBehaviour
                 SetCustomAnim(nextAnimData, direction);
         }
 
-        animator.SetFloat("StrafeDir", PercentClockwise(transform.forward.xz().normalized, input.normalized));
+        animator.SetFloat("StrafeDir", PercentClockwise(Character.mainShells.transform.forward.xz().normalized, input.normalized));
         animator.SetInteger("WeaponType", weaponType);
         animator.SetBool("LeftHanded", leftHanded);
         animator.SetBool("HasShield", hasShield);
@@ -167,7 +167,7 @@ public class HumanoidCustomMoves : MonoBehaviour
         animator.SetBool("Strafe", isStrafing && !input.IsZero());
         if (isStrafing && (!IsRunningCustomAnim || (IsRunningCustomAnim && !currentCustomAnim.blockMovement)))
         {            
-            Vector2 nextPosition = transform.position.xz() + input.normalized * strafeSpeed * Time.deltaTime;
+            Vector2 nextPosition = Character.mainShells.transform.position.xz() + input.normalized * strafeSpeed * Time.deltaTime;
             Character.SetPosition(nextPosition);
         }
     }
@@ -178,7 +178,7 @@ public class HumanoidCustomMoves : MonoBehaviour
     }
     private void SetCustomAnim(CustomAnimationData customAnim)
     {
-        SetCustomAnim(customAnim, transform.forward.xz().normalized);
+        SetCustomAnim(customAnim, Character.mainShells.transform.forward.xz().normalized);
     }
     private void SetCustomAnim(CustomAnimationData customAnim, Vector2 dir)
     {
@@ -187,7 +187,7 @@ public class HumanoidCustomMoves : MonoBehaviour
         currentCustomAnim = customAnim;
         customAnimStartTime = Time.time;
         customAnimStartDir = dir;
-        customAnimStartPos = transform.position.xz();
+        customAnimStartPos = Character.mainShells.transform.position.xz();
     }
     private static int GetWeaponType(ItemData leftHandItem, ItemData rightHandItem, out bool leftHanded, out bool hasShield)
     {

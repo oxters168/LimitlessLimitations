@@ -5,7 +5,12 @@ public class AnimateAndMoveCharacter : ValuedObject
 {
     public enum MovementState { idle = 0, walk = 1, jog = 2, swimIdle = 3, swimStroke = 4, underwaterIdle = 5, underwaterStroke = 6, flyIdle = 7, flyFwd = 8, lieDown = 9, standUp = 10, sleep = 11 }
 
-    [Tooltip("The height of the water plane in world units")]
+    [Tooltip("The main shown renderer of the character")]
+    public Skinwalker mainShells;
+    [Tooltip("The dummy renderer of the character (used for astral projection)")]
+    public Skinwalker dummyShells;
+
+    [Space(10), Tooltip("The height of the water plane in world units")]
     public float waterLevel = 7;
 
     [Space(10), Tooltip("The amount from the top of the character's bounds that stays above the water (in meters)")]
@@ -13,6 +18,7 @@ public class AnimateAndMoveCharacter : ValuedObject
     [Tooltip("How much being in water effects speed when walking or jogging (I don't know if trudge is actually a word, but it is now)")]
     public float trudgeEffect = 0.3f;
 
+    private float currentSpeed;
     [Space(10), Tooltip("In meters per second")]
     public float walkSpeed = 1.5f;
     [Tooltip("In meters per second")]
@@ -34,19 +40,18 @@ public class AnimateAndMoveCharacter : ValuedObject
     [Tooltip("The angle between the previous input and the current input where the idle to move delay does not apply")]
     public float idleToMoveExempt = 45;
 
-    [Space(10), Tooltip("The material to be used on the character shell when astral set to true")]
-    public Material astralMaterial;
+    // [Space(10), Tooltip("The material to be used on the character shell when astral set to true")]
+    // public Material astralMaterial;
     [Tooltip("Sets the character into the astral form")]
     public bool astral;
     [Tooltip("The time it takes to enter/exit the astral body (in seconds)")]
     public float astralShiftDuration = 2;
     private float astralShiftStart = -1;
     public bool InAstral { get; private set; }
-    private Material[] originalMaterials;
-    private HumanoidShell currentShell = null;
+    // private HumanoidShell currentShell = null;
 
-    [Space(10), Tooltip("Character will lie down and be unable to move if set to true")]
-    public bool asleep;
+    // [Space(10), Tooltip("Character will lie down and be unable to move if set to true")]
+    // public bool asleep;
 
     [Space(10), Tooltip("If true the character will be able to fly during astral projection")]
     public bool canFly;
@@ -73,8 +78,6 @@ public class AnimateAndMoveCharacter : ValuedObject
     private float percentUnderwater;
     
     public MovementState currentMovementState { get; private set; }
-    private Animator _animator;
-    private Animator animator { get { if (_animator == null || !_animator.gameObject.activeInHierarchy) _animator = GetComponentInChildren<Animator>(); return _animator; } }
 
     private Vector2 input;
     private Vector2 prevInput;
@@ -101,7 +104,8 @@ public class AnimateAndMoveCharacter : ValuedObject
         
         RefreshAstralStatus();
         RefreshFlightStatus();
-        RefreshShellMaterial();
+        RefreshAstralAppearance();
+        // RefreshShellMaterial();
         if (equipSlots != null)
             equipSlots.SetVisible(!(astral && InAstral));
         
@@ -109,19 +113,20 @@ public class AnimateAndMoveCharacter : ValuedObject
         ApplyValuesToAnimator();
 
         //Check is underwater
-        IsUnderwater = !IsFlying && CheckIsUnderwater(transform, waterLevel, castingHeight, waterTip, out percentUnderwater, out _isSteppingInWater);
+        IsUnderwater = !IsFlying && CheckIsUnderwater(mainShells.transform, waterLevel, castingHeight, waterTip, out percentUnderwater, out _isSteppingInWater);
 
         //Set state
-        currentMovementState = GetMovementState(transform, input, prevInput, idleToMoveTime, idleToMoveExempt, ref inputStartTime, currentMovementState, IsFlying, jog, IsUnderwater, astral, InAstral, asleep);
+        currentMovementState = GetMovementState(mainShells.transform, input, prevInput, idleToMoveTime, idleToMoveExempt, ref inputStartTime, currentMovementState, IsFlying, jog, IsUnderwater, astral, InAstral);
         
-        float currentSpeed = GetCurrentSpeed(currentMovementState, walkSpeed, jogSpeed, swimSpeed, underwaterSpeed, flySpeed, trudgeEffect, percentUnderwater, IsSteppingInWater);
+        float targetSpeed = GetCurrentSpeed(currentMovementState, walkSpeed, jogSpeed, swimSpeed, underwaterSpeed, flySpeed, trudgeEffect, percentUnderwater, IsSteppingInWater);
 
         //Affect speed based on joystick if flying
         if (IsFlying)
         {
             float inputAffect = input.ToCircle().magnitude;
-            currentSpeed *= inputAffect;
+            targetSpeed *= inputAffect;
         }
+        currentSpeed = Mathf.Lerp(currentSpeed, targetSpeed, Time.deltaTime * 5);
 
         //Set transform rotation
         AdjustRotation(currentSpeed, Mathf.Max(walkSpeed, jogSpeed, swimSpeed, underwaterSpeed));
@@ -132,19 +137,19 @@ public class AnimateAndMoveCharacter : ValuedObject
         prevInput = input;
         isColliding = false;
     }
-    void OnTriggerStay(Collider other)
+    public void OnTriggerStay(Collider other)
     {
         isColliding = true;
 
-        var characterBounds = transform.GetTotalBounds(Space.World);
+        var characterBounds = mainShells.transform.GetTotalBounds(Space.World);
         var otherBounds = other.transform.GetTotalBounds(Space.World);
         Vector2 offset = characterBounds.center.xz() - otherBounds.center.xz();
         Vector2 dir = (offset).normalized;
         
-        float distance = (transform.position.xz() - prevPosition).magnitude;
+        float distance = (mainShells.transform.position.xz() - prevPosition).magnitude;
         if (distance < float.Epsilon)
             distance = 0.1f;
-        Vector2 borderPosition = transform.position.xz() + dir * distance;
+        Vector2 borderPosition = mainShells.transform.position.xz() + dir * distance;
 
         // Vector2 breach = characterBounds.center.xz() - otherBounds.center.xz();
 
@@ -204,6 +209,17 @@ public class AnimateAndMoveCharacter : ValuedObject
         SetPosition(borderPosition);
     }
 
+    private void RefreshAstralAppearance()
+    {
+        bool dummyShowing = astral && InAstral;
+        if (!dummyShowing)
+        {
+            dummyShells.transform.position = mainShells.transform.position;
+            dummyShells.transform.rotation = mainShells.transform.rotation;
+        }
+        dummyShells.gameObject.SetActive(dummyShowing);
+        mainShells.materialIndex = astral && InAstral ? 0 : -1;
+    }
     private void RefreshAstralStatus()
     {
         if (astral)
@@ -224,12 +240,6 @@ public class AnimateAndMoveCharacter : ValuedObject
                     blockRotation = false;
                 }
             }
-            // else
-            // {
-            //     astralShiftStart = -1;
-            //     blockMovement = false;
-            //     blockRotation = false;
-            // }
         }
         else
         {
@@ -249,12 +259,6 @@ public class AnimateAndMoveCharacter : ValuedObject
                     blockRotation = false;
                 }
             }
-            // else
-            // {
-            //     astralShiftStart = -1;
-            //     blockMovement = false;
-            //     blockRotation = false;
-            // }
         }
     }
     private void RefreshFlightStatus()
@@ -271,7 +275,7 @@ public class AnimateAndMoveCharacter : ValuedObject
                 if (!groundDown)
                 {
                     groundDown = true;
-                    if (IsFlying && (transform.position.y - (GetGroundHeightAt(transform.position.xz(), castingHeight) + flyMinHeight)) <= float.Epsilon)
+                    if (IsFlying && (mainShells.transform.position.y - (GetGroundHeightAt(mainShells.transform.position.xz(), castingHeight) + flyMinHeight)) <= float.Epsilon)
                     {
                         IsFlying = false;
                     }
@@ -282,36 +286,6 @@ public class AnimateAndMoveCharacter : ValuedObject
         }
         else
             IsFlying = false;
-    }
-    private void RefreshShellMaterial()
-    {
-        if (currentShell == null || !currentShell.gameObject.activeInHierarchy)
-        {
-            RevertShellMaterials();
-            currentShell = GetComponentInChildren<HumanoidShell>();
-        }
-
-        if (astral && InAstral)
-        {
-            if (originalMaterials == null)
-            {
-                originalMaterials = currentShell.shellRenderer.materials;
-                Material[] astralMaterials = new Material[originalMaterials.Length];
-                for (int i = 0; i < astralMaterials.Length; i++)
-                    astralMaterials[i] = astralMaterial;
-                currentShell.shellRenderer.materials = astralMaterials;
-            }
-        }
-        else
-            RevertShellMaterials();
-    }
-    private void RevertShellMaterials()
-    {
-        if (currentShell != null && originalMaterials != null)
-        {
-            currentShell.shellRenderer.materials = originalMaterials;
-            originalMaterials = null;
-        }
     }
     public static bool IsIdle(MovementState currentMovementState)
     {
@@ -377,9 +351,11 @@ public class AnimateAndMoveCharacter : ValuedObject
 
     private void ApplyValuesToAnimator()
     {
-        animator.SetInteger("State", (int)currentMovementState);
+        mainShells.CurrentAnimator.SetInteger("State", (int)currentMovementState);
+        if (dummyShells.gameObject.activeInHierarchy)
+            dummyShells.CurrentAnimator.SetInteger("State", (int)MovementState.sleep);
     }
-    private static MovementState GetMovementState(Transform transform, Vector2 currentInput, Vector2 prevInput, float idleToMoveTime, float angleDelayExempt, ref float inputStartTime, MovementState currentMovementState, bool fly, bool jog, bool isUnderwater, bool astral, bool inAstral, bool asleep)
+    private static MovementState GetMovementState(Transform transform, Vector2 currentInput, Vector2 prevInput, float idleToMoveTime, float angleDelayExempt, ref float inputStartTime, MovementState currentMovementState, bool fly, bool jog, bool isUnderwater, bool astral, bool inAstral)
     {
         MovementState resultState = currentMovementState;
         bool hasInput = !currentInput.IsZero();
@@ -417,9 +393,6 @@ public class AnimateAndMoveCharacter : ValuedObject
                 resultState = MovementState.standUp;
         }
 
-        if (asleep)
-            resultState = MovementState.sleep;
-
         return resultState;
     }
 
@@ -429,23 +402,23 @@ public class AnimateAndMoveCharacter : ValuedObject
         {
             float maxRotDiff = rotSpeed * Time.deltaTime;
 
-            float angleDiff = transform.forward.xz().normalized.GetShortestSignedAngle(input.normalized);
+            float angleDiff = mainShells.transform.forward.xz().normalized.GetShortestSignedAngle(input.normalized);
             float appliedRotDiff = angleDiff;
             if (Mathf.Abs(appliedRotDiff) > maxRotDiff)
                 appliedRotDiff = maxRotDiff * Mathf.Sign(appliedRotDiff);
 
             appliedRotDiff = Mathf.Lerp(angleDiff, appliedRotDiff, speedEffect.Evaluate(Mathf.Clamp01(currentSpeed / maxSpeed)));
-            transform.forward = Quaternion.AngleAxis(appliedRotDiff, Vector3.up) * transform.forward;
+            mainShells.transform.forward = Quaternion.AngleAxis(appliedRotDiff, Vector3.up) * mainShells.transform.forward;
         }
     }
     private void AdjustPosition(float speed)
     {
-        Vector3 finalPosition = transform.position;
+        Vector3 finalPosition = mainShells.transform.position;
         if (!blockMovement && !isColliding && !IsIdle(currentMovementState))
         {
             float positionOffset = speed * Time.deltaTime;
 
-            finalPosition += transform.forward * positionOffset;
+            finalPosition += mainShells.transform.forward * positionOffset;
         }
 
         SetPosition(finalPosition.xz());
@@ -456,15 +429,15 @@ public class AnimateAndMoveCharacter : ValuedObject
 
         Vector3 nextPosition = new Vector3(position.x, characterPosY, position.y);
 
-        prevPosition = transform.position.xz();
-        transform.position = nextPosition;
+        prevPosition = mainShells.transform.position.xz();
+        mainShells.transform.position = nextPosition;
     }
     private float GetY(Vector2 position)
     {
         float characterPosY;
         if (IsFlying)
         {
-            float nextY = transform.position.y;
+            float nextY = mainShells.transform.position.y;
             if (up)
                 nextY += ascendDescendSpeed * Time.deltaTime;
             else if (down)
@@ -477,7 +450,7 @@ public class AnimateAndMoveCharacter : ValuedObject
         }
         else if (IsUnderwater)
         {
-            var bounds = transform.GetTotalBounds(Space.Self);
+            var bounds = mainShells.transform.GetTotalBounds(Space.Self);
             characterPosY = waterLevel - (bounds.size.y - waterTip);
         }
         else

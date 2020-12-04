@@ -10,7 +10,7 @@ public class UserCharacterManager : MonoBehaviour
     private MimicTransform waterInstance;
     public AnimateAndMoveCharacter characterPrefab;
     private AnimateAndMoveCharacter characterInstance;
-    private AnimateAndMoveCharacter dummyCharacter;
+    // private AnimateAndMoveCharacter dummyCharacter;
 
     public bool InVehicle { get { return currentVehicle != null; } }
     public ValuedObject currentVehicle;
@@ -24,9 +24,9 @@ public class UserCharacterManager : MonoBehaviour
         characterInstance = GameObject.Instantiate(characterPrefab);
         var bridge = characterInstance.gameObject.AddComponent<PlayerInputBridge>();
 
-        dummyCharacter = GameObject.Instantiate(characterPrefab);
-        Destroy(dummyCharacter.GetComponent<Collider>());
-        dummyCharacter.gameObject.SetActive(false);
+        // dummyCharacter = GameObject.Instantiate(characterPrefab);
+        // Destroy(dummyCharacter.GetComponent<Collider>());
+        // dummyCharacter.gameObject.SetActive(false);
 
         bridge.playerId = playerId;
         bridge.controlledObject = characterInstance.gameObject;
@@ -35,12 +35,12 @@ public class UserCharacterManager : MonoBehaviour
 
         followCamera = GameObject.Instantiate(cameraPrefab);
 
-        FollowTransform(characterInstance.transform);
+        FollowTransform(characterInstance.mainShells.transform);
     }
     void Update()
     {
         SetCameraValues();
-        dummyCharacter.gameObject.SetActive(characterInstance.astral && characterInstance.InAstral);
+        // dummyCharacter.gameObject.SetActive(characterInstance.astral && characterInstance.InAstral);
     }
     void FixedUpdate()
     {
@@ -64,7 +64,7 @@ public class UserCharacterManager : MonoBehaviour
         }
         else
         {
-            height = characterInstance.transform.position.y;
+            height = characterInstance.mainShells.transform.position.y;
             minDistance = 5;
             maxDistance = 40;
         }
@@ -88,11 +88,6 @@ public class UserCharacterManager : MonoBehaviour
             {
                 if (!astralled)
                 {
-                    dummyCharacter.transform.position = characterInstance.transform.position;
-                    dummyCharacter.transform.rotation = characterInstance.transform.rotation;
-                    dummyCharacter.asleep = true;
-                    // dummyCharacter.gameObject.SetActive(true);
-
                     characterInstance.astral = true;
                     astralled = true;
                 }
@@ -102,8 +97,6 @@ public class UserCharacterManager : MonoBehaviour
             {
                 if (!astralled)
                 {
-                    // dummyCharacter.gameObject.SetActive(false);
-
                     characterInstance.astral = false;
                     astralled = true;
                 }
@@ -116,7 +109,7 @@ public class UserCharacterManager : MonoBehaviour
     {
         if (!InVehicle)
         {
-            RaycastHit[] raycastHits = Physics.BoxCastAll(characterInstance.transform.position + Vector3.up, new Vector3(2.5f, 1f, 2.5f), Vector3.up, Quaternion.identity, 1f, LayerMask.GetMask("Vehicle"));
+            RaycastHit[] raycastHits = Physics.BoxCastAll(characterInstance.mainShells.transform.position + Vector3.up, new Vector3(2.5f, 1f, 2.5f), Vector3.up, Quaternion.identity, 1f, LayerMask.GetMask("Vehicle"));
             if (raycastHits.Length > 0)
             {
                 var valuedVehicle = raycastHits[0].transform.GetComponent<ValuedObject>();
@@ -157,7 +150,7 @@ public class UserCharacterManager : MonoBehaviour
         }
 
         HideCharacter(vehicle == null);
-        FollowTransform(vehicle != null ? vehicle.transform : characterInstance.transform);
+        FollowTransform(vehicle != null ? vehicle.transform : characterInstance.mainShells.transform);
 
         currentVehicle = vehicle;
     }

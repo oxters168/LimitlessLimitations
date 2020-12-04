@@ -5,8 +5,13 @@ public class HumanoidAI : MonoBehaviour
 {
     public Transform target;
 
-    private IValueManager _inputAI;
-    private IValueManager InputAI { get { if (_inputAI == null) _inputAI = GetComponent<IValueManager>(); return _inputAI; } }
+    [Space(10), Tooltip("The distance from the target where the AI starts to walk")]
+    public float walkDistance = 3;
+    [Tooltip("The distance from the target where the AI stops")]
+    public float stopDistance = 0.01f;
+
+    private AnimateAndMoveCharacter _inputAI;
+    private AnimateAndMoveCharacter InputAI { get { if (_inputAI == null) _inputAI = GetComponent<AnimateAndMoveCharacter>(); return _inputAI; } }
 
     void Update()
     {
@@ -14,20 +19,16 @@ public class HumanoidAI : MonoBehaviour
         bool run = false;
         if (target != null)
         {
-            Vector2 diff = target.position.xz() - transform.position.xz();
+            Vector2 diff = target.position.xz() - InputAI.mainShells.transform.position.xz();
             float distance = diff.magnitude;
-            if (distance > 1)
+            if (distance > walkDistance)
                 run = true;
-            if (distance > 0.01f)
+            if (distance > stopDistance)
                 input = diff.normalized;
-            // input = input.Sign();
         }
 
-        // if (!input.IsZero())
-        // {
-            InputAI.SetAxis("horizontal", input.x);
-            InputAI.SetAxis("vertical", input.y);
-            InputAI.SetToggle("crossBtn", run);
-        // }
+        InputAI.SetAxis("horizontal", input.x);
+        InputAI.SetAxis("vertical", input.y);
+        InputAI.SetToggle("crossBtn", run);
     }
 }
