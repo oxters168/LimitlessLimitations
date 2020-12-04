@@ -21,6 +21,16 @@ public class HumanoidEquipSlots : MonoBehaviour
             RefreshSlots();
         }
     }
+
+    public void SetVisible(bool isOn)
+    {
+        leftHandWildcard.gameObject.SetActive(isOn);
+        rightHandWildcard.gameObject.SetActive(isOn);
+        leftShoulderWildcard.gameObject.SetActive(isOn);
+        rightShoulderWildcard.gameObject.SetActive(isOn);
+        leftHipWildcard.gameObject.SetActive(isOn);
+        rightHipWildcard.gameObject.SetActive(isOn);
+    }
     public void SetItem(ItemData item, SlotSpace slot)
     {
         bodySlots[(int)slot] = item;

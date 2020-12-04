@@ -1188,6 +1188,31 @@ AnimatorStateMachine:
   m_ExitPosition: {x: 330, y: 240, z: 0}
   m_ParentStateMachinePosition: {x: -260, y: 150, z: 0}
   m_DefaultState: {fileID: 1813594081303279583}
+--- !u!1101 &-6668218957501408096
+AnimatorStateTransition:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_Conditions:
+  - m_ConditionMode: 6
+    m_ConditionEvent: State
+    m_EventTreshold: 11
+  m_DstStateMachine: {fileID: 0}
+  m_DstState: {fileID: 2847316503285130953}
+  m_Solo: 0
+  m_Mute: 0
+  m_IsExit: 0
+  serializedVersion: 3
+  m_TransitionDuration: 0.25
+  m_TransitionOffset: 0
+  m_ExitTime: 0.75
+  m_HasExitTime: 0
+  m_HasFixedDuration: 1
+  m_InterruptionSource: 0
+  m_OrderedInterruption: 1
+  m_CanTransitionToSelf: 0
 --- !u!1101 &-6666681337867404700
 AnimatorStateTransition:
   m_ObjectHideFlags: 1
@@ -5296,10 +5321,13 @@ AnimatorStateMachine:
     m_Position: {x: 230, y: -240, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 5717920106813471974}
-    m_Position: {x: 180, y: -60, z: 0}
+    m_Position: {x: 250, y: -140, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -6438729690962407280}
-    m_Position: {x: -190, y: -60, z: 0}
+    m_Position: {x: -220, y: -130, z: 0}
+  - serializedVersion: 1
+    m_State: {fileID: 2847316503285130953}
+    m_Position: {x: -10, y: -40, z: 0}
   m_ChildStateMachines:
   - serializedVersion: 1
     m_StateMachine: {fileID: 5198149441660745528}
@@ -5343,6 +5371,7 @@ AnimatorStateMachine:
   - {fileID: 2004037371402273665}
   - {fileID: 3312120066084417253}
   - {fileID: 6444725566265825983}
+  - {fileID: -6668218957501408096}
   m_EntryTransitions: []
   m_StateMachineTransitions:
   - first: {fileID: 5198149441660745528}
@@ -5778,6 +5807,32 @@ AnimatorStateTransition:
   m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 0
+--- !u!1102 &2847316503285130953
+AnimatorState:
+  serializedVersion: 5
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Laydown-Sleep
+  m_Speed: 1
+  m_CycleOffset: 0
+  m_Transitions: []
+  m_StateMachineBehaviours: []
+  m_Position: {x: 50, y: 50, z: 0}
+  m_IKOnFeet: 0
+  m_WriteDefaultValues: 1
+  m_Mirror: 0
+  m_SpeedParameterActive: 0
+  m_MirrorParameterActive: 0
+  m_CycleOffsetParameterActive: 0
+  m_TimeParameterActive: 0
+  m_Motion: {fileID: 7400000, guid: 220829d0429d0114d893a64d9dcbd853, type: 3}
+  m_Tag: 
+  m_SpeedParameter: 
+  m_MirrorParameter: 
+  m_CycleOffsetParameter: 
+  m_TimeParameter: 
 --- !u!1101 &2868523355467470371
 AnimatorStateTransition:
   m_ObjectHideFlags: 1

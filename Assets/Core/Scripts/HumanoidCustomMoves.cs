@@ -62,7 +62,7 @@ public class HumanoidCustomMoves : MonoBehaviour
             EquipSlots.SetItem(testWeaponR, HumanoidEquipSlots.SlotSpace.rightHand);
         }
 
-        if ((Character.IsUnderwater || Character.astral || Character.InAstral || Character.IsFlying) && EquipSlots.isHeld)
+        if ((Character.IsUnderwater || Character.asleep || Character.astral || Character.InAstral || Character.IsFlying) && EquipSlots.isHeld)
             EquipSlots.isHeld = false;
 
         if (Time.time - lastAttack > currentAttackComboTime)
@@ -76,9 +76,9 @@ public class HumanoidCustomMoves : MonoBehaviour
                 
         //Input stuff
         Vector2 input = new Vector2(Character.GetAxis("horizontal"), Character.GetAxis("vertical"));
-        isStrafing = Character.GetToggle("r2Btn") && !Character.IsUnderwater && !Character.astral && !Character.InAstral && !Character.IsFlying;
-        isBlocking = Character.GetToggle("l2Btn") && !Character.IsUnderwater && !Character.astral && !Character.InAstral && !Character.IsFlying;
-        if ((!IsRunningCustomAnim || currentCustomAnim.canBeInterrupted) && !Character.IsUnderwater && !Character.astral && !Character.InAstral && !Character.IsFlying)
+        isStrafing = Character.GetToggle("r2Btn") && !Character.IsUnderwater && !Character.asleep && !Character.astral && !Character.InAstral && !Character.IsFlying;
+        isBlocking = Character.GetToggle("l2Btn") && !Character.IsUnderwater && !Character.asleep && !Character.astral && !Character.InAstral && !Character.IsFlying;
+        if ((!IsRunningCustomAnim || currentCustomAnim.canBeInterrupted) && !Character.IsUnderwater && !Character.asleep && !Character.astral && !Character.InAstral && !Character.IsFlying)
         {
             CustomAnimationData nextAnimData = null;
             Vector2 direction = transform.forward.xz().normalized;

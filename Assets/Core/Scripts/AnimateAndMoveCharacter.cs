@@ -3,7 +3,7 @@ using UnityHelpers;
 
 public class AnimateAndMoveCharacter : ValuedObject
 {
-    public enum MovementState { idle = 0, walk = 1, jog = 2, swimIdle = 3, swimStroke = 4, underwaterIdle = 5, underwaterStroke = 6, flyIdle = 7, flyFwd = 8, lieDown = 9, standUp = 10 }
+    public enum MovementState { idle = 0, walk = 1, jog = 2, swimIdle = 3, swimStroke = 4, underwaterIdle = 5, underwaterStroke = 6, flyIdle = 7, flyFwd = 8, lieDown = 9, standUp = 10, sleep = 11 }
 
     [Tooltip("The height of the water plane in world units")]
     public float waterLevel = 7;
@@ -45,6 +45,9 @@ public class AnimateAndMoveCharacter : ValuedObject
     private Material[] originalMaterials;
     private HumanoidShell currentShell = null;
 
+    [Space(10), Tooltip("Character will lie down and be unable to move if set to true")]
+    public bool asleep;
+
     [Space(10), Tooltip("If true the character will be able to fly during astral projection")]
     public bool canFly;
     public bool IsFlying { get; private set; }
@@ -82,6 +85,12 @@ public class AnimateAndMoveCharacter : ValuedObject
     private Vector2 prevPosition;
     private bool isColliding;
 
+    private HumanoidEquipSlots equipSlots;
+
+    void Start()
+    {
+        equipSlots = GetComponentInChildren<HumanoidEquipSlots>();
+    }
     void Update()
     {
         //Retrieve input
@@ -93,6 +102,8 @@ public class AnimateAndMoveCharacter : ValuedObject
         RefreshAstralStatus();
         RefreshFlightStatus();
         RefreshShellMaterial();
+        if (equipSlots != null)
+            equipSlots.SetVisible(!(astral && InAstral));
         
         //Set animator values
         ApplyValuesToAnimator();
@@ -101,7 +112,7 @@ public class AnimateAndMoveCharacter : ValuedObject
         IsUnderwater = !IsFlying && CheckIsUnderwater(transform, waterLevel, castingHeight, waterTip, out percentUnderwater, out _isSteppingInWater);
 
         //Set state
-        currentMovementState = GetMovementState(transform, input, prevInput, idleToMoveTime, idleToMoveExempt, ref inputStartTime, currentMovementState, IsFlying, jog, IsUnderwater, astral, InAstral);
+        currentMovementState = GetMovementState(transform, input, prevInput, idleToMoveTime, idleToMoveExempt, ref inputStartTime, currentMovementState, IsFlying, jog, IsUnderwater, astral, InAstral, asleep);
         
         float currentSpeed = GetCurrentSpeed(currentMovementState, walkSpeed, jogSpeed, swimSpeed, underwaterSpeed, flySpeed, trudgeEffect, percentUnderwater, IsSteppingInWater);
 
@@ -368,7 +379,7 @@ public class AnimateAndMoveCharacter : ValuedObject
     {
         animator.SetInteger("State", (int)currentMovementState);
     }
-    private static MovementState GetMovementState(Transform transform, Vector2 currentInput, Vector2 prevInput, float idleToMoveTime, float angleDelayExempt, ref float inputStartTime, MovementState currentMovementState, bool fly, bool jog, bool isUnderwater, bool astral, bool inAstral)
+    private static MovementState GetMovementState(Transform transform, Vector2 currentInput, Vector2 prevInput, float idleToMoveTime, float angleDelayExempt, ref float inputStartTime, MovementState currentMovementState, bool fly, bool jog, bool isUnderwater, bool astral, bool inAstral, bool asleep)
     {
         MovementState resultState = currentMovementState;
         bool hasInput = !currentInput.IsZero();
@@ -405,6 +416,9 @@ public class AnimateAndMoveCharacter : ValuedObject
             else
                 resultState = MovementState.standUp;
         }
+
+        if (asleep)
+            resultState = MovementState.sleep;
 
         return resultState;
     }
